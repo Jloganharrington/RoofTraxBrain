@@ -22,7 +22,7 @@ export const nuHomeCompanyPack: CompanyPack = {
     website: null,
   },
   licenses: [
-    { state: 'VA', number: 'VA-CLASS-A-PLACEHOLDER', classification: 'Class A Contractor (RBC)' },
+    { state: 'VA', number: '2705-064938A', classification: 'VA Class A Contractor' },
   ],
   qualifications: {
     statement:

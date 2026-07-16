@@ -18,18 +18,63 @@ export const VA_STATE_CODE = 'VA';
 export const virginiaStatePack: StatePack = {
   stateCode: 'VA',
   stateName: 'Virginia',
+  // Real, sourced Virginia homeowner-rights content (Homeowner-Rights-Information-Page).
+  // State-scoped/company-agnostic: {{contractor}} / {{license}} are substituted
+  // from the resolved company pack at render. References current as of
+  // preparation; verify at law.lis.virginia.gov before go-live.
   homeownerRights: {
-    title: 'Homeowner Information — Your Rights in the Claims Process',
-    body:
-      'This page is provided for your information and education. It is not legal advice and does ' +
-      'not interpret your insurance policy. Under Virginia law, you as the policyholder have the ' +
-      'right to file a claim for covered storm damage, to receive fair and prompt handling of that ' +
-      'claim by your insurer, to obtain and rely on documentation of the physical condition of your ' +
-      'property, and to select the licensed contractor of your choice to perform any repairs. This ' +
-      'proof package documents the physical damage your contractor observed, the weather event ' +
-      'believed to have caused it, the applicable building-code requirements for a compliant repair, ' +
-      'and your contractor’s fixed cost to restore the property. Decisions about coverage and the ' +
-      'amount payable under your policy are made between you and your insurer.',
+    title: 'Homeowner Information Page',
+    subtitle: 'Your Property Insurance Claim: What Virginia Law Provides',
+    preparedByNote: 'Provided for general educational purposes by {{contractor}} — {{license}}.',
+    sections: [
+      {
+        heading: 'Our Role — and What It Is Not',
+        paragraphs: [
+          '{{contractor}} is your contractor. Our role in this claim is limited to matters within our professional expertise: identifying and documenting physical damage, assessing repairability, preparing the scope and cost of repairs, and citing the building codes and manufacturer requirements that govern how those repairs must be performed.',
+          'We are not a public adjuster, attorney, or insurance advisor. Under Virginia law (Va. Code § 38.2-1845.1 et seq.), only a licensed public adjuster or a licensed attorney may negotiate, adjust, or provide advice regarding the settlement of your insurance claim on your behalf. All decisions regarding your claim — including whether to accept, dispute, or appeal any coverage determination — are yours alone to make. The information below is general, publicly available information about Virginia law. It is not advice about your specific claim.',
+        ],
+      },
+      {
+        heading: 'What Virginia Law Requires of Your Insurance Company',
+        paragraphs: [
+          "Virginia's Unfair Claim Settlement Practices rules (Va. Code § 38.2-510 and 14VAC5-400) establish minimum standards insurers must follow when handling property claims. Among them:",
+          'Acknowledgment. Your insurer must acknowledge receipt of your claim within 15 calendar days, and must respond to your inquiries within 15 calendar days. (14VAC5-400-50)',
+          'Prompt decision. Within 15 calendar days after receiving your properly executed proof of loss, your insurer must advise you whether the claim is accepted or denied. If it needs more time, it must tell you why in writing and continue to provide written status updates while the investigation remains open. (14VAC5-400-60)',
+          'Written denials with reasons. Any denial must be given to you in writing and must include a reasonable written explanation of its basis; if the denial relies on a policy provision, the insurer must specifically reference that provision. (14VAC5-400-70)',
+          'No misrepresentation. An insurer may not misrepresent policy provisions or knowingly conceal from you, directly or by omission, benefits, coverages, or other provisions of your policy that apply to your claim. (14VAC5-400-40)',
+          'Fair settlement practices. Virginia law prohibits insurers from failing to attempt in good faith to make prompt, fair, and equitable settlements of claims in which liability has become reasonably clear. (Va. Code § 38.2-510)',
+        ],
+      },
+      {
+        heading: 'Your Rights as a Virginia Policyholder',
+        paragraphs: [
+          'You have the right to communicate directly with your insurer. You may speak with your adjuster, request documents, and ask that any coverage position be put in writing.',
+          'You have the right to a written explanation. If any part of your claim is denied or reduced, you may request the specific policy language the insurer is relying upon.',
+          'You have the right to review your policy. You are entitled to a complete copy of your policy, including all endorsements, from your insurer or agent.',
+          "You have the right to professional representation. You may, at your option, hire a licensed public adjuster (licensed by the Virginia Bureau of Insurance under Va. Code § 38.2-1845.2) or a licensed attorney to advise on or negotiate your claim. You can verify a public adjuster's license through the State Corporation Commission's license lookup.",
+          "You have the right to invoke your policy's dispute provisions. Most property policies contain provisions (such as an appraisal clause) that establish a process for resolving disagreements about the amount of loss. Whether and how to invoke any such provision is your decision.",
+          'You have the right to file a complaint. If you believe your insurer has not handled your claim in accordance with Virginia law, you may file a complaint with the Virginia State Corporation Commission, Bureau of Insurance:',
+        ],
+      },
+      {
+        heading: 'How This Proof Package Fits In',
+        paragraphs: [
+          'The documentation in this package — storm data, photographs, code citations, and our repairability assessment — reflects our professional findings as your contractor regarding the physical condition of your property and the scope of repairs required. You are free to share this package with your insurer, your public adjuster, or your attorney. What you do with it, and every decision about your claim, remains entirely in your hands.',
+        ],
+      },
+    ],
+    complaintBlock: [
+      'Virginia Bureau of Insurance — Consumer Services',
+      'P.O. Box 1157, Richmond, VA 23218',
+      'Toll-free: 1-877-310-6560',
+      'scc.virginia.gov (Bureau of Insurance -> File a Complaint)',
+    ],
+    closingDisclaimer:
+      'This document is provided for general informational purposes only and does not constitute legal, ' +
+      'insurance, or claims advice. {{contractor}} does not negotiate, adjust, or advise on the settlement ' +
+      'of insurance claims. For advice regarding your specific claim, consult a licensed public adjuster or ' +
+      'attorney. Statutory and regulatory references are current as of the date of preparation; verify ' +
+      'current law at law.lis.virginia.gov.',
   },
   uppaDisclaimer: {
     statuteCitation: 'Va. Code § 38.2-1845.1 et seq.',

@@ -59,11 +59,23 @@ export interface AdderRule {
   unit: string; // e.g. "LF", "SQ", "EA"
 }
 
+// Exhibit A — Homeowner Information (educational; never advice). Structured so
+// the exhibit renders the real, sourced legal content faithfully. State-scoped
+// and company-agnostic: `{{contractor}}` / `{{license}}` tokens are substituted
+// from the resolved company pack at render time.
+export interface HomeownerRightsPack {
+  title: string;
+  subtitle: string;
+  preparedByNote: string; // may contain {{contractor}} / {{license}}
+  sections: Array<{ heading: string; paragraphs: string[] }>;
+  complaintBlock: string[]; // contact lines rendered as a highlighted block
+  closingDisclaimer: string;
+}
+
 export interface StatePack {
   stateCode: string;
   stateName: string;
-  // Exhibit A — Homeowner Information (educational; never advice)
-  homeownerRights: { title: string; body: string };
+  homeownerRights: HomeownerRightsPack;
   // Closing UPPA disclaimer — statute-cited, per-state, counsel-reviewed before go-live
   uppaDisclaimer: { statuteCitation: string; body: string };
   // Exhibit I — per-state code library, cross-referenced from the scope element

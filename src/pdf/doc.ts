@@ -208,16 +208,54 @@ export class PdfDoc {
     this.y -= s + 4;
   }
 
+  // Draw one line justified — distribute slack evenly across word gaps so the
+  // line fills the full measure. Falls back to left for a single word.
+  private drawJustified(
+    line: string,
+    y: number,
+    size: number,
+    font: PDFFont,
+    color: RGB,
+    maxWidth: number,
+  ): void {
+    const words = line.split(' ').filter((w) => w.length > 0);
+    if (words.length <= 1) {
+      this.page.drawText(line, { x: MARGIN_X, y, size, font, color });
+      return;
+    }
+    const spaceW = font.widthOfTextAtSize(' ', size);
+    const wordsW = words.reduce((s, w) => s + font.widthOfTextAtSize(w, size), 0);
+    const natural = wordsW + spaceW * (words.length - 1);
+    const extra = Math.max(0, maxWidth - natural) / (words.length - 1);
+    let cx = MARGIN_X;
+    for (const w of words) {
+      this.page.drawText(w, { x: cx, y, size, font, color });
+      cx += font.widthOfTextAtSize(w, size) + spaceW + extra;
+    }
+  }
+
+  // Body prose is justified: every wrapped line is filled to the measure except
+  // the last line of each paragraph (the line before a hard break, or the final
+  // line), which stays left-aligned per convention.
   paragraph(text: string, opts?: { size?: number; color?: RGB; italic?: boolean }): void {
     const size = clampFont(opts?.size ?? 9.5);
     const font = opts?.italic ? this.italic : this.reg;
     const color = opts?.color ?? INK;
     const lh = size + 3.5;
-    for (const ln of this.wrap(text, font, size, this.contentWidth)) {
+    const lines = this.wrap(text, font, size, this.contentWidth);
+    const lastIdx = lines.length - 1;
+    lines.forEach((ln, i) => {
       this.ensure(lh);
-      if (ln) this.page.drawText(ln, { x: MARGIN_X, y: this.y, size, font, color });
+      if (ln) {
+        const continues = i < lastIdx && lines[i + 1] !== '';
+        if (continues && ln.includes(' ')) {
+          this.drawJustified(ln, this.y, size, font, color, this.contentWidth);
+        } else {
+          this.page.drawText(ln, { x: MARGIN_X, y: this.y, size, font, color });
+        }
+      }
       this.y -= lh;
-    }
+    });
     this.y -= 3;
   }
 

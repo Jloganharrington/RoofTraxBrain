@@ -24,24 +24,26 @@ export const exhibitA: ExhibitGenerator = {
     const { doc } = ctx;
     const r = ctx.config.state.homeownerRights;
 
-    doc.heading(r.title, 2);
-    doc.paragraph(r.subtitle, { italic: true });
-    doc.paragraph(fill(r.preparedByNote, ctx), { size: 8.5, color: undefined });
+    // Homeowner Information renders 2pt larger than the document body for
+    // readability (body 12, section headings 12, title 15).
+    doc.heading(r.title, 2, 15);
+    doc.paragraph(r.subtitle, { size: 12, italic: true });
+    doc.paragraph(fill(r.preparedByNote, ctx), { size: 12, color: undefined });
 
     for (const section of r.sections) {
-      doc.eyebrow(section.heading);
+      doc.eyebrow(section.heading, 12);
       for (const p of section.paragraphs) {
-        doc.paragraph(fill(p, ctx), { size: 9 });
+        doc.paragraph(fill(p, ctx), { size: 12 });
       }
     }
 
     // Complaint contact block (highlighted).
     if (r.complaintBlock.length > 0) {
       doc.spacer(2);
-      doc.bullets(r.complaintBlock.map((line) => fill(line, ctx)), { size: 9 });
+      doc.bullets(r.complaintBlock.map((line) => fill(line, ctx)), { size: 12 });
     }
 
     doc.spacer(4);
-    doc.paragraph(fill(r.closingDisclaimer, ctx), { size: 8, italic: true });
+    doc.paragraph(fill(r.closingDisclaimer, ctx), { size: 12, italic: true });
   },
 };

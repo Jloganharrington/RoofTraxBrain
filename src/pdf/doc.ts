@@ -183,8 +183,8 @@ export class PdfDoc {
     return out;
   }
 
-  heading(text: string, level: 1 | 2 | 3 = 2): void {
-    const size = level === 1 ? 18 : level === 2 ? 13 : 11;
+  heading(text: string, level: 1 | 2 | 3 = 2, sizeOverride?: number): void {
+    const size = clampFont(sizeOverride ?? (level === 1 ? 18 : level === 2 ? 13 : 11));
     const font = this.bold;
     this.spacer(level === 1 ? 6 : 12);
     for (const ln of this.wrap(text, font, size, this.contentWidth)) {
@@ -195,16 +195,17 @@ export class PdfDoc {
     this.y -= 4;
   }
 
-  eyebrow(text: string): void {
-    this.ensure(12);
+  eyebrow(text: string, size = MIN_FONT): void {
+    const s = clampFont(size);
+    this.ensure(s + 2);
     this.page.drawText(sanitize(text).toUpperCase(), {
       x: MARGIN_X,
       y: this.y,
-      size: 10,
+      size: s,
       font: this.bold,
       color: MUTED,
     });
-    this.y -= 14;
+    this.y -= s + 4;
   }
 
   paragraph(text: string, opts?: { size?: number; color?: RGB; italic?: boolean }): void {

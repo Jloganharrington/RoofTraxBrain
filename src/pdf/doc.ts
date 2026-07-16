@@ -35,6 +35,11 @@ const INK = rgb(0.08, 0.12, 0.18);
 const MUTED = rgb(0.42, 0.46, 0.52);
 const LINE = rgb(0.82, 0.85, 0.88);
 
+// Document-wide minimum type size (pt). Every text primitive clamps to this, so
+// no rendered text — including sizes passed in by exhibits — falls below it.
+const MIN_FONT = 10;
+const clampFont = (n: number): number => Math.max(MIN_FONT, n);
+
 export interface DocMeta {
   brandName: string;
   primaryHex: string;
@@ -104,7 +109,7 @@ export class PdfDoc {
     this.page.drawText(label, {
       x: PAGE_W - MARGIN_X - this.reg.widthOfTextAtSize(label, 8),
       y: PAGE_H - 50,
-      size: 8,
+      size: 10,
       font: this.reg,
       color: MUTED,
     });
@@ -125,21 +130,21 @@ export class PdfDoc {
       height: 0.5,
       color: LINE,
     });
-    const left = sanitize(
-      'Contractor documentation of physical findings and incurred cost - not legal advice or a coverage determination.',
-    );
+    // Kept short so it fits beside the version/page stamp at the 10pt floor; the
+    // full UPPA disclaimer lives on the summary page.
+    const left = sanitize('Contractor findings & incurred cost - not a coverage determination.');
     this.page.drawText(left, {
       x: MARGIN_X,
       y: MARGIN_BOTTOM - 24,
-      size: 6.5,
+      size: MIN_FONT,
       font: this.reg,
       color: MUTED,
     });
     const right = sanitize(`${this.meta.version}  ·  p.${this.pageNum}`);
     this.page.drawText(right, {
-      x: PAGE_W - MARGIN_X - this.reg.widthOfTextAtSize(right, 7),
+      x: PAGE_W - MARGIN_X - this.reg.widthOfTextAtSize(right, MIN_FONT),
       y: MARGIN_BOTTOM - 24,
-      size: 7,
+      size: MIN_FONT,
       font: this.reg,
       color: MUTED,
     });
@@ -195,7 +200,7 @@ export class PdfDoc {
     this.page.drawText(sanitize(text).toUpperCase(), {
       x: MARGIN_X,
       y: this.y,
-      size: 8,
+      size: 10,
       font: this.bold,
       color: MUTED,
     });
@@ -203,7 +208,7 @@ export class PdfDoc {
   }
 
   paragraph(text: string, opts?: { size?: number; color?: RGB; italic?: boolean }): void {
-    const size = opts?.size ?? 9.5;
+    const size = clampFont(opts?.size ?? 9.5);
     const font = opts?.italic ? this.italic : this.reg;
     const color = opts?.color ?? INK;
     const lh = size + 3.5;
@@ -216,7 +221,7 @@ export class PdfDoc {
   }
 
   bullets(items: string[], opts?: { size?: number }): void {
-    const size = opts?.size ?? 9.5;
+    const size = clampFont(opts?.size ?? 9.5);
     const lh = size + 3.5;
     const indent = 14;
     for (const item of items) {
@@ -234,7 +239,7 @@ export class PdfDoc {
   }
 
   keyValues(rows: Array<[string, string]>, opts?: { labelWidth?: number }): void {
-    const size = 9.5;
+    const size = MIN_FONT;
     const lh = size + 4;
     const labelW = opts?.labelWidth ?? 150;
     for (const [k, v] of rows) {
@@ -252,7 +257,7 @@ export class PdfDoc {
   }
 
   table(columns: TableColumn[], rows: string[][]): void {
-    const size = 8.5;
+    const size = MIN_FONT;
     const cw = this.contentWidth;
     const widths = columns.map((c) => (c.width <= 1 ? c.width * cw : c.width));
     const xs: number[] = [];

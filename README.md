@@ -21,22 +21,28 @@ Built and locally verified: **B0–B5.**
 | B3 | Exhibits A (homeowner), B (qualifications), C (methodology) | ✅ |
 | B4 | Exhibits D (storm), E (damage + photo index), H (measurements) | ✅ |
 | B5 | Exhibits I (codes), J (scope+pricing), K (adders), L (contract) — code→scope→price spine | ✅ |
+| B7 | Package build route + byte-level photo re-hash (chain of custody) + download + CRM ingest seam | ✅ |
 | **B6** | Exhibits F (repairability), G (manufacturer), M (signed conclusion) — **AI, Replit hand-off** | ⏳ |
-| **B7** | Package build route, byte-level photo re-hash, CRM sync, delivery | ⏳ |
 
 The full A–L package renders end to end from a fixture (`npm run sample` →
 `out/sample.pdf`, 21 pages) with correct pricing math — verified without a DB.
+`tsx scripts/verify-b7.ts` verifies the chain-of-custody re-hash both ways
+(matching bytes pass, tampered/unfetchable bytes reject) + the package store.
 
 ## Deferred (do not forget)
 
 - **B6 — AI exhibits F/G/M.** Repairability/matching narrative, manufacturer
   docs, signed repairability conclusion (renders the on-file signature). Built via
   the Replit hand-off per the no-local-AI rule. Needs the Opus-vs-Gemini decision.
-- **Byte-level photo re-hash (from M-F seam).** Intake currently trusts the field
-  app's server-verified hashes. The Brain must fetch photo bytes from object
-  storage and re-hash them against the manifest for true chain-of-custody. Hook
-  point: `src/routes/submissions.ts`.
-- **B7 — package route + delivery + CRM report ingest.**
+- **CRM report-ingest activation.** The outbound ingest is defined (`src/crm/ingest.ts`)
+  but inert — no Brain-side `company_crm_config` table yet, so every tenant's CRM
+  thread reports `pending`. Wire the config + per-tenant key when the CRM
+  multi-tenant rollout provides them.
+- **Async job wrapper.** `POST /submissions/:id/package` renders inline and awaits.
+  A production deploy can wrap it in a job queue; the app polls `GET /status`, so
+  no client change is needed then.
+- **Object storage + DB at deploy.** The re-hash needs `OBJECT_STORAGE_BASE_URL`
+  (403 → 503 without it); routes need a real `DATABASE_URL`.
 
 ## Run
 

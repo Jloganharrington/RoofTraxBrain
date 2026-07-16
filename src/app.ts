@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { healthRouter } from './routes/health.js';
 import { submissionsRouter } from './routes/submissions.js';
+import { packagesRouter } from './routes/packages.js';
 
 export function createApp(): Express {
   const app = express();
@@ -12,6 +13,7 @@ export function createApp(): Express {
 
   app.use(healthRouter);
   app.use(submissionsRouter);
+  app.use(packagesRouter);
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'not_found' });

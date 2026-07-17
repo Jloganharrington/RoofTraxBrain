@@ -6,11 +6,14 @@ import {
   integer,
   doublePrecision,
   bigint,
+  boolean,
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import type { CompanyPack, StatePack } from '../tenancy/types.js';
+import type { SubscriptionTier, PaymentStatus } from '../billing/types.js';
+import type { DocumentKind, DocumentScope } from '../documents/types.js';
 import type {
   SubmissionManifestV1,
   SubmittedInspection,
@@ -73,6 +76,49 @@ export const submissionsTable = pgTable('submissions', {
   aiModel: text('ai_model'),
   aiGeneratedAt: timestamp('ai_generated_at', { withTimezone: true }),
 });
+
+// ---- Billing: subscription tier + payment status per tenant ----
+// Stripe is the intended source of truth once webhooks land; these columns
+// mirror it. Until then they're set from the admin UI. The Brain never stores
+// card data — only the tier/status it needs for entitlement.
+
+export const subscriptionsTable = pgTable('subscriptions', {
+  companyId: text('company_id')
+    .primaryKey()
+    .references(() => companiesTable.id, { onDelete: 'cascade' }),
+  tier: text('tier').$type<SubscriptionTier>().notNull().default('payg'),
+  status: text('status').$type<PaymentStatus>().notNull().default('none'),
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ---- Document Center: versioned, human-editable rendering config ----
+
+export const documentsTable = pgTable(
+  'documents',
+  {
+    id: text('id').primaryKey().default(sql`gen_random_uuid()`),
+    kind: text('kind').$type<DocumentKind>().notNull(),
+    scope: text('scope').$type<DocumentScope>().notNull().default('global'),
+    scopeRef: text('scope_ref'), // state code or company id when scoped
+    key: text('key').notNull(), // stable slug, e.g. 'phase2-forensic-report'
+    name: text('name').notNull(),
+    version: integer('version').notNull().default(1),
+    contentType: text('content_type').notNull().default('text/html'),
+    body: text('body'), // inline content (HTML templates)
+    storageRef: text('storage_ref'), // object-storage ref for binaries (PDFs)
+    active: boolean('active').notNull().default(false),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byKey: index('documents_key_idx').on(t.kind, t.key),
+    uniqVersion: uniqueIndex('documents_version_uniq').on(t.kind, t.key, t.scope, t.scopeRef, t.version),
+  }),
+);
 
 // ---- NOAA Storm Events: rolling 24-month severe-weather corpus ----
 // Ingested from NCEI bulk `StormEvents_details` files, filtered to serviced
@@ -150,6 +196,8 @@ export const noaaIngestRunsTable = pgTable('noaa_ingest_runs', {
 
 export type CompanyRow = typeof companiesTable.$inferSelect;
 export type StateRow = typeof statesTable.$inferSelect;
+export type SubscriptionRow = typeof subscriptionsTable.$inferSelect;
+export type DocumentRow = typeof documentsTable.$inferSelect;
 export type StormEventRow = typeof stormEventsTable.$inferSelect;
 export type CountyCoverageRow = typeof countyCoverageTable.$inferSelect;
 export type NoaaIngestRunRow = typeof noaaIngestRunsTable.$inferSelect;

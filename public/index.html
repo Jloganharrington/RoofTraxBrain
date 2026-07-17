@@ -45,61 +45,30 @@
       z-index: 10;
     }
 
-    .logo {
-      padding: 20px 18px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    .logo-mark {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--sub);
-    }
-    .logo-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-      margin-top: 2px;
-    }
+    .logo { padding: 20px 18px 16px; border-bottom: 1px solid var(--border); }
+    .logo-mark { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--sub); }
+    .logo-title { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 2px; }
 
-    nav { padding: 10px 8px; flex: 1; }
+    nav { padding: 10px 8px; flex: 1; display: flex; flex-direction: column; }
     nav a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: 6px;
-      color: var(--sub);
-      text-decoration: none;
-      font-size: 13.5px;
-      font-weight: 500;
-      cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 6px;
+      color: var(--sub); text-decoration: none;
+      font-size: 13.5px; font-weight: 500; cursor: pointer;
       transition: background .12s, color .12s;
-      margin-bottom: 2px;
+      margin-bottom: 2px; user-select: none;
     }
     nav a:hover { background: var(--border); color: var(--text); }
     nav a.active { background: rgba(59,130,246,.15); color: var(--accent); }
+    nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
     nav a svg { flex-shrink: 0; opacity: .8; }
 
-    .status-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--muted);
-      margin-left: auto;
-      flex-shrink: 0;
-    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); margin-left: auto; flex-shrink: 0; }
     .status-dot.ok { background: var(--green); }
     .status-dot.err { background: var(--red); }
 
     /* ── Main ── */
-    main {
-      margin-left: var(--sidebar);
-      flex: 1;
-      padding: 28px 32px;
-      max-width: 1100px;
-    }
-
+    main { margin-left: var(--sidebar); flex: 1; padding: 28px 32px; max-width: 1180px; }
     .page { display: none; }
     .page.active { display: block; }
 
@@ -108,12 +77,7 @@
 
     /* ── Cards ── */
     .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 28px; }
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-    }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
     .card-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
     .card-value { font-size: 26px; font-weight: 700; line-height: 1; }
     .card-value.green { color: var(--green); }
@@ -123,93 +87,77 @@
     .card-note { font-size: 12px; color: var(--sub); margin-top: 6px; }
 
     /* ── Section header ── */
-    .section-head {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 12px;
-    }
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
     .section-head h2 { font-size: 15px; font-weight: 600; }
 
-    /* ── Tables ── */
-    .table-wrap {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      margin-bottom: 28px;
+    /* ── Toolbar (search + actions) ── */
+    .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .search {
+      flex: 1; min-width: 200px; max-width: 340px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font: inherit; font-size: 13px; padding: 7px 11px;
     }
+    .search::placeholder { color: var(--muted); }
+    .search:focus { outline: none; border-color: var(--accent); }
+    .count-note { font-size: 12px; color: var(--sub); margin-left: auto; }
+
+    /* ── Tables ── */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 28px; }
     table { width: 100%; border-collapse: collapse; }
     thead th {
-      text-align: left;
-      padding: 10px 14px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--sub);
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
+      text-align: left; padding: 10px 14px;
+      font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--sub); background: var(--bg); border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
+    thead th.sortable { cursor: pointer; user-select: none; }
+    thead th.sortable:hover { color: var(--text); }
+    thead th .arrow { opacity: .35; margin-left: 4px; font-size: 9px; }
+    thead th.sorted { color: var(--accent); }
+    thead th.sorted .arrow { opacity: 1; }
+    thead th.num, tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
     tbody tr { border-bottom: 1px solid var(--border); }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: rgba(255,255,255,.02); }
     tbody td { padding: 10px 14px; vertical-align: middle; }
 
     /* ── Badges ── */
-    .badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 2px 9px; border-radius: 99px;
-      font-size: 11px; font-weight: 600;
-    }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; }
     .badge-green  { background: rgba(34,197,94,.12);  color: var(--green); }
     .badge-yellow { background: rgba(245,158,11,.12); color: var(--yellow); }
     .badge-red    { background: rgba(239,68,68,.12);  color: var(--red); }
     .badge-blue   { background: rgba(59,130,246,.12); color: var(--accent); }
     .badge-muted  { background: var(--border);        color: var(--sub); }
-
     .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
-    /* ── Buttons ── */
-    button {
-      border: none; border-radius: 6px; cursor: pointer;
-      font-size: 12px; font-weight: 600; padding: 5px 12px;
-      transition: opacity .12s;
+    /* ── Inline select ── */
+    select.inline {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font: inherit; font-size: 12px; padding: 4px 7px; cursor: pointer;
     }
+    select.inline:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Buttons ── */
+    button { border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; padding: 5px 12px; transition: opacity .12s; font-family: inherit; }
     button:hover { opacity: .85; }
     button:disabled { opacity: .4; cursor: default; }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-danger  { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+    .btn-ghost   { background: var(--border); color: var(--sub); }
+    .btn-ghost:hover { color: var(--text); background: var(--muted); }
     .btn-sm { padding: 4px 10px; font-size: 11px; }
 
-    /* ── Empty state ── */
-    .empty {
-      padding: 40px;
-      text-align: center;
-      color: var(--sub);
-      font-size: 13px;
-    }
+    /* ── States ── */
+    .empty { padding: 40px; text-align: center; color: var(--sub); font-size: 13px; }
+    .err-state { padding: 28px; text-align: center; }
+    .err-state .msg { color: var(--red); font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .err-state .detail { color: var(--sub); font-size: 12px; margin-bottom: 12px; word-break: break-word; }
 
-    /* ── Mono ── */
     code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: .9em; color: var(--sub); }
 
-    /* ── Refresh ── */
-    .refresh-btn {
-      background: var(--border); color: var(--sub); padding: 5px 12px; font-size: 12px;
-    }
-    .refresh-btn:hover { color: var(--text); background: var(--muted); }
-
-    /* ── Spinner ── */
     @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      vertical-align: middle;
-    }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
 
-    /* ── Toast ── */
     #toast {
       position: fixed; bottom: 24px; right: 24px;
       background: var(--surface); border: 1px solid var(--border);
@@ -217,11 +165,26 @@
       font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.4);
       opacity: 0; transform: translateY(8px);
       transition: opacity .2s, transform .2s;
-      pointer-events: none; z-index: 100;
+      pointer-events: none; z-index: 100; max-width: 380px;
     }
     #toast.show { opacity: 1; transform: translateY(0); }
 
-    .ts { color: var(--sub); font-size: 12px; }
+    .ts { color: var(--sub); font-size: 12px; white-space: nowrap; }
+
+    /* ── Document editor ── */
+    .doc-editor { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 28px; }
+    .doc-editor textarea {
+      width: 100%; min-height: 260px; resize: vertical;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
+      padding: 10px; line-height: 1.5;
+    }
+    .doc-editor textarea:focus { outline: none; border-color: var(--accent); }
+    .doc-editor .row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+    .doc-editor .row .title { font-size: 14px; font-weight: 600; }
+    .kv { display: grid; grid-template-columns: 190px 1fr; gap: 8px 14px; font-size: 13px; }
+    .kv dt { color: var(--sub); }
+    .kv dd { color: var(--text); }
   </style>
 </head>
 <body>
@@ -232,28 +195,36 @@
     <div class="logo-title">Brain Admin</div>
   </div>
   <nav>
-    <a class="active" data-page="overview" onclick="nav(this)">
+    <a data-page="overview" tabindex="0">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       Overview
       <span class="status-dot" id="nav-health-dot"></span>
     </a>
-    <a data-page="companies" onclick="nav(this)">
+    <a data-page="companies" tabindex="0">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Companies
     </a>
-    <a data-page="states" onclick="nav(this)">
+    <a data-page="states" tabindex="0">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
       States
     </a>
-    <a data-page="submissions" onclick="nav(this)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    <a data-page="submissions" tabindex="0">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       Submissions
     </a>
-    <a data-page="noaa" onclick="nav(this)">
+    <a data-page="noaa" tabindex="0">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
       NOAA Weather
     </a>
-    <a onclick="logout()" style="margin-top:auto">
+    <a data-page="documents" tabindex="0">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4a2 2 0 0 1 2-2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Documents
+    </a>
+    <a data-page="settings" tabindex="0">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+    <a id="signout-link" tabindex="0" style="margin-top:auto">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Sign out
     </a>
@@ -266,22 +237,25 @@
   <div id="page-overview" class="page active">
     <h1>Overview</h1>
     <p class="page-sub">System health and summary at a glance.</p>
-
-    <div class="cards" id="overview-cards">
+    <div class="cards">
       <div class="card"><div class="card-label">Service</div><div class="card-value" id="ov-service"><span class="spinner"></span></div></div>
       <div class="card"><div class="card-label">Database</div><div class="card-value" id="ov-db"><span class="spinner"></span></div></div>
       <div class="card"><div class="card-label">Submissions</div><div class="card-value blue" id="ov-subs">—</div></div>
       <div class="card"><div class="card-label">States Ready</div><div class="card-value" id="ov-states">—</div></div>
     </div>
-
-    <div class="section-head"><h2>Recent Submissions</h2></div>
+    <div class="section-head"><h2>Recent Submissions</h2><button class="btn-ghost btn-sm" data-refresh="overview">Refresh</button></div>
     <div class="table-wrap" id="ov-table-wrap"><div class="empty"><span class="spinner"></span></div></div>
   </div>
 
   <!-- ── Companies ── -->
   <div id="page-companies" class="page">
     <h1>Companies</h1>
-    <p class="page-sub">Registered tenants and their configuration packs.</p>
+    <p class="page-sub">Registered tenants, volume, and subscription status. Search any column; click a header to sort.</p>
+    <div class="toolbar">
+      <input class="search" id="companies-search" type="search" placeholder="Search companies…" autocomplete="off" />
+      <button class="btn-ghost btn-sm" data-refresh="companies">Refresh</button>
+      <span class="count-note" id="companies-count"></span>
+    </div>
     <div class="table-wrap" id="companies-wrap"><div class="empty"><span class="spinner"></span></div></div>
   </div>
 
@@ -289,6 +263,7 @@
   <div id="page-states" class="page">
     <h1>States</h1>
     <p class="page-sub">State packs and counsel-review go-live status. A state must have a <code>reviewedAt</code> timestamp before packages can be generated.</p>
+    <div class="toolbar"><button class="btn-ghost btn-sm" data-refresh="states">Refresh</button></div>
     <div class="table-wrap" id="states-wrap"><div class="empty"><span class="spinner"></span></div></div>
   </div>
 
@@ -297,6 +272,11 @@
     <h1>Submissions</h1>
     <p class="page-sub">Inspection envelopes received from RoofTraxMobile. Showing last 50.</p>
     <div class="cards" id="sub-counts"></div>
+    <div class="toolbar">
+      <input class="search" id="submissions-search" type="search" placeholder="Search submissions…" autocomplete="off" />
+      <button class="btn-ghost btn-sm" data-refresh="submissions">Refresh</button>
+      <span class="count-note" id="submissions-count"></span>
+    </div>
     <div class="table-wrap" id="submissions-wrap"><div class="empty"><span class="spinner"></span></div></div>
   </div>
 
@@ -304,17 +284,34 @@
   <div id="page-noaa" class="page">
     <h1>NOAA Weather</h1>
     <p class="page-sub">Storm Events corpus coverage and ingest history.</p>
-
     <div class="cards">
       <div class="card"><div class="card-label">Storm Events</div><div class="card-value blue" id="noaa-count">—</div><div class="card-note">24-month rolling corpus</div></div>
       <div class="card"><div class="card-label">Counties Tracked</div><div class="card-value" id="noaa-counties">—</div></div>
     </div>
-
-    <div class="section-head"><h2>County Coverage</h2></div>
+    <div class="section-head"><h2>County Coverage</h2><button class="btn-ghost btn-sm" data-refresh="noaa">Refresh</button></div>
     <div class="table-wrap" id="noaa-coverage-wrap"><div class="empty"><span class="spinner"></span></div></div>
-
     <div class="section-head" style="margin-top:8px"><h2>Recent Ingest Runs</h2></div>
     <div class="table-wrap" id="noaa-runs-wrap"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+
+  <!-- ── Documents ── -->
+  <div id="page-documents" class="page">
+    <h1>Documents</h1>
+    <p class="page-sub">Versioned rendering config — report templates and state legal/code documents. Editing always creates a new version; activating one retires its siblings, so history stays intact and rollback is one click.</p>
+    <div class="toolbar">
+      <input class="search" id="documents-search" type="search" placeholder="Search documents…" autocomplete="off" />
+      <button class="btn-ghost btn-sm" data-refresh="documents">Refresh</button>
+      <span class="count-note" id="documents-count"></span>
+    </div>
+    <div class="table-wrap" id="documents-wrap"><div class="empty"><span class="spinner"></span></div></div>
+    <div id="doc-editor-host"></div>
+  </div>
+
+  <!-- ── Settings ── -->
+  <div id="page-settings" class="page">
+    <h1>Settings</h1>
+    <p class="page-sub">Operational configuration. Secret <em>values</em> are never shown — only whether each is configured.</p>
+    <div id="settings-host"><div class="empty"><span class="spinner"></span></div></div>
   </div>
 
 </main>
@@ -323,7 +320,7 @@
 
 <script>
 // ── Auth ──────────────────────────────────────────────────────────────────────
-// Any 401 from the admin API means the session expired — go to login.
+// A 401 from the admin API means the session expired — bounce to login.
 const _fetch = window.fetch.bind(window);
 window.fetch = async (...args) => {
   const res = await _fetch(...args);
@@ -337,27 +334,84 @@ async function logout() {
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentPage = 'overview';
-let loaded = {};
+const loaded = {};
+
+// ── Fetch helper ──────────────────────────────────────────────────────────────
+// Never let a failure vanish: non-OK and bad JSON both raise a descriptive Error
+// that the page-level guard renders. (The old code let these become unhandled
+// rejections, which left an eternal spinner and looked like a dead button.)
+async function loadJson(url, opts) {
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.json())?.error ?? ''; } catch {}
+    throw new Error(`${res.status} ${res.statusText}${detail ? ` — ${detail}` : ''}`);
+  }
+  try { return await res.json(); }
+  catch { throw new Error('Malformed JSON from ' + url); }
+}
+
+// Wrap a loader so any failure renders a visible error + Retry instead of hanging.
+async function guard(wrapId, fn) {
+  const wrap = document.getElementById(wrapId);
+  try {
+    await fn();
+  } catch (err) {
+    if (String(err?.message) === 'unauthorized') return;
+    if (wrap) {
+      wrap.innerHTML = `<div class="err-state">
+        <div class="msg">Couldn't load this section</div>
+        <div class="detail">${esc(String(err?.message || err))}</div>
+        <button class="btn-primary btn-sm" data-retry="${esc(currentPage)}">Retry</button>
+      </div>`;
+    }
+    toast('Load failed: ' + String(err?.message || err), 'var(--red)');
+  }
+}
 
 // ── Navigation ────────────────────────────────────────────────────────────────
-function nav(el) {
-  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-  el.classList.add('active');
+function showPage(page) {
+  document.querySelectorAll('nav a[data-page]').forEach(a => {
+    a.classList.toggle('active', a.dataset.page === page);
+  });
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  currentPage = el.dataset.page;
-  document.getElementById('page-' + currentPage).classList.add('active');
-  loadPage(currentPage);
+  const el = document.getElementById('page-' + page);
+  if (!el) { toast('Unknown page: ' + page, 'var(--red)'); return; }
+  el.classList.add('active');
+  currentPage = page;
+  loadPage(page);
 }
 
 function loadPage(page, force = false) {
   if (loaded[page] && !force) return;
   loaded[page] = true;
-  if (page === 'overview')    loadOverview();
-  if (page === 'companies')   loadCompanies();
-  if (page === 'states')      loadStates();
-  if (page === 'submissions') loadSubmissions();
-  if (page === 'noaa')        loadNoaa();
+  const fns = {
+    overview: loadOverview, companies: loadCompanies, states: loadStates,
+    submissions: loadSubmissions, noaa: loadNoaa, documents: loadDocuments, settings: loadSettings,
+  };
+  fns[page]?.();
 }
+
+// Real event listeners (not inline onclick) + keyboard support.
+document.querySelectorAll('nav a[data-page]').forEach(a => {
+  a.addEventListener('click', () => showPage(a.dataset.page));
+  a.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showPage(a.dataset.page); } });
+});
+document.getElementById('signout-link').addEventListener('click', logout);
+
+// Delegated: Refresh + Retry buttons anywhere.
+document.addEventListener('click', e => {
+  const r = e.target.closest('[data-refresh]');
+  if (r) { loadPage(r.dataset.refresh, true); return; }
+  const rt = e.target.closest('[data-retry]');
+  if (rt) { loadPage(rt.dataset.retry, true); }
+});
+
+// Nothing fails silently, ever again.
+window.addEventListener('unhandledrejection', e => {
+  if (String(e.reason?.message) === 'unauthorized') return;
+  toast('Error: ' + String(e.reason?.message || e.reason), 'var(--red)');
+});
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 let toastTimer;
@@ -367,225 +421,389 @@ function toast(msg, color = 'var(--text)') {
   el.style.color = color;
   el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmt = ts => ts ? new Date(ts).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
 const trunc = (s, n=28) => s && s.length > n ? s.slice(0,n)+'…' : (s || '—');
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const num = n => Number(n ?? 0).toLocaleString('en-US');
 
 function statusBadge(s) {
   const map = {
-    received:          ['blue',   'Received'],
-    validating:        ['yellow', 'Validating'],
-    generating:        ['yellow', 'Generating'],
-    generation_failed: ['red',    'Generation Failed'],
-    package_ready:     ['green',  'Package Ready'],
-    rejected:          ['red',    'Rejected'],
+    received:['blue','Received'], validating:['yellow','Validating'], generating:['yellow','Generating'],
+    generation_failed:['red','Generation Failed'], package_ready:['green','Package Ready'], rejected:['red','Rejected'],
   };
   const [cls, label] = map[s] || ['muted', s];
-  return `<span class="badge badge-${cls}">${label}</span>`;
+  return `<span class="badge badge-${cls}">${esc(label)}</span>`;
 }
+const goLiveBadge = r => r ? `<span class="badge badge-green">Go-Live</span>` : `<span class="badge badge-yellow">Pending Review</span>`;
 
-function goLiveBadge(reviewedAt) {
-  if (reviewedAt) return `<span class="badge badge-green">Go-Live</span>`;
-  return `<span class="badge badge-yellow">Pending Review</span>`;
+const TIER_LABEL = { payg:'Pay-as-you-go', starter:'Starter', pro:'Pro' };
+const PAY_LABEL  = { active:'Active', past_due:'Past Due', canceled:'Canceled', trialing:'Trialing', none:'No Subscription' };
+const PAY_CLASS  = { active:'green', past_due:'red', canceled:'muted', trialing:'blue', none:'muted' };
+
+// ── Sortable / searchable table ───────────────────────────────────────────────
+// One generic engine drives every table: hold data + sort + filter in a small
+// state object, re-render on change.
+function makeTable({ wrapId, state, columns, searchKeys, emptyMsg, countId }) {
+  function render() {
+    const wrap = document.getElementById(wrapId);
+    const q = (state.search || '').trim().toLowerCase();
+    let rows = !q ? state.data.slice()
+      : state.data.filter(r => searchKeys.some(k => String(r[k] ?? '').toLowerCase().includes(q)));
+
+    const col = columns.find(c => c.key === state.sortKey);
+    if (col) {
+      const dir = state.sortDir === 'desc' ? -1 : 1;
+      rows.sort((a, b) => {
+        const av = col.sortVal ? col.sortVal(a) : a[col.key];
+        const bv = col.sortVal ? col.sortVal(b) : b[col.key];
+        if (col.type === 'num') return (Number(av || 0) - Number(bv || 0)) * dir;
+        return String(av ?? '').localeCompare(String(bv ?? ''), 'en', { sensitivity: 'base' }) * dir;
+      });
+    }
+
+    if (countId) {
+      document.getElementById(countId).textContent =
+        rows.length === state.data.length ? `${state.data.length} total` : `${rows.length} of ${state.data.length}`;
+    }
+    if (!state.data.length) { wrap.innerHTML = `<div class="empty">${esc(emptyMsg)}</div>`; return; }
+    if (!rows.length) { wrap.innerHTML = `<div class="empty">No matches for “${esc(state.search)}”.</div>`; return; }
+
+    const head = columns.map(c => {
+      const sorted = state.sortKey === c.key;
+      const arrow = sorted ? (state.sortDir === 'desc' ? '▼' : '▲') : '↕';
+      return `<th class="sortable ${c.type === 'num' ? 'num' : ''} ${sorted ? 'sorted' : ''}" data-sort="${c.key}">${esc(c.label)}<span class="arrow">${arrow}</span></th>`;
+    }).join('');
+
+    wrap.innerHTML = `<table><thead><tr>${head}</tr></thead>
+      <tbody>${rows.map(r => `<tr>${columns.map(c => `<td class="${c.type === 'num' ? 'num' : ''}">${c.cell(r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+
+    wrap.querySelectorAll('th[data-sort]').forEach(th => th.addEventListener('click', () => {
+      const k = th.dataset.sort;
+      if (state.sortKey === k) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      else { state.sortKey = k; state.sortDir = columns.find(c => c.key === k)?.type === 'num' ? 'desc' : 'asc'; }
+      render();
+    }));
+  }
+  state.render = render;
+  return render;
 }
 
 // ── Overview ──────────────────────────────────────────────────────────────────
 async function loadOverview() {
-  const [health, subs, states] = await Promise.all([
-    fetch('/api/admin/health').then(r => r.json()),
-    fetch('/api/admin/submissions').then(r => r.json()),
-    fetch('/api/admin/states').then(r => r.json()),
-  ]);
+  await guard('ov-table-wrap', async () => {
+    let health, subs, states;
+    try {
+      [health, subs, states] = await Promise.all([
+        loadJson('/api/admin/health'), loadJson('/api/admin/submissions'), loadJson('/api/admin/states'),
+      ]);
+    } catch (err) {
+      // Never leave the stat cards spinning on failure — the guard only owns the table.
+      document.getElementById('nav-health-dot').className = 'status-dot err';
+      ['ov-service','ov-db','ov-subs','ov-states'].forEach(id => {
+        document.getElementById(id).innerHTML = '<span style="color:var(--red)">—</span>';
+      });
+      throw err;
+    }
+    document.getElementById('nav-health-dot').className = 'status-dot ' + (health.ok ? 'ok' : 'err');
+    const ov = id => document.getElementById(id);
+    ov('ov-service').innerHTML = health.ok ? '<span style="color:var(--green)">Online</span>' : '<span style="color:var(--red)">Offline</span>';
+    ov('ov-db').innerHTML = health.db ? '<span style="color:var(--green)">Connected</span>' : '<span style="color:var(--red)">Error</span>';
+    ov('ov-subs').textContent = (subs.counts || []).reduce((a, c) => a + Number(c.n), 0);
 
-  // Health dot
-  const dot = document.getElementById('nav-health-dot');
-  dot.className = 'status-dot ' + (health.ok ? 'ok' : 'err');
+    const goLive = (states || []).filter(s => s.reviewedAt).length;
+    const el = ov('ov-states');
+    el.textContent = goLive + '/' + (states || []).length;
+    el.className = 'card-value ' + (goLive > 0 ? 'green' : 'yellow');
 
-  const ov = v => document.getElementById(v);
-  ov('ov-service').innerHTML = health.ok
-    ? '<span style="color:var(--green)">Online</span>'
-    : '<span style="color:var(--red)">Offline</span>';
-  ov('ov-db').innerHTML = health.db
-    ? '<span style="color:var(--green)">Connected</span>'
-    : '<span style="color:var(--red)">Error</span>';
-
-  const total = subs.rows.length;
-  ov('ov-subs').textContent = subs.counts.reduce((a,c) => a + Number(c.n), 0);
-
-  const goLive = states.filter(s => s.reviewedAt).length;
-  const statesEl = ov('ov-states');
-  statesEl.textContent = goLive + '/' + states.length;
-  statesEl.className = 'card-value ' + (goLive > 0 ? 'green' : 'yellow');
-
-  // Recent submissions table
-  const wrap = document.getElementById('ov-table-wrap');
-  const recent = subs.rows.slice(0, 10);
-  if (!recent.length) { wrap.innerHTML = '<div class="empty">No submissions yet.</div>'; return; }
-  wrap.innerHTML = `<table>
-    <thead><tr>
-      <th>Inspection ID</th><th>Company</th><th>State</th><th>Status</th><th>Received</th>
-    </tr></thead>
-    <tbody>${recent.map(r => `<tr>
-      <td><code>${trunc(r.inspectionId,24)}</code></td>
-      <td>${r.companyId}</td>
-      <td>${r.stateCode}</td>
-      <td>${statusBadge(r.status)}</td>
-      <td class="ts">${fmt(r.receivedAt)}</td>
-    </tr>`).join('')}</tbody>
-  </table>`;
+    const wrap = document.getElementById('ov-table-wrap');
+    const recent = (subs.rows || []).slice(0, 10);
+    if (!recent.length) { wrap.innerHTML = '<div class="empty">No submissions yet.</div>'; return; }
+    wrap.innerHTML = `<table><thead><tr><th>Inspection ID</th><th>Company</th><th>State</th><th>Status</th><th>Received</th></tr></thead>
+      <tbody>${recent.map(r => `<tr>
+        <td><code>${esc(trunc(r.inspectionId,24))}</code></td><td>${esc(r.companyId)}</td><td>${esc(r.stateCode)}</td>
+        <td>${statusBadge(r.status)}</td><td class="ts">${fmt(r.receivedAt)}</td></tr>`).join('')}</tbody></table>`;
+  });
 }
 
 // ── Companies ─────────────────────────────────────────────────────────────────
+const companiesState = { data: [], sortKey: 'name', sortDir: 'asc', search: '' };
+
+const COMPANY_COLUMNS = [
+  { key:'name', label:'Company Name', type:'text', cell: r => `<strong>${esc(r.name)}</strong><br><code>${esc(r.id)}</code>` },
+  { key:'mtdSubmissions', label:'MtD Submissions', type:'num', cell: r => num(r.mtdSubmissions) },
+  { key:'ytdSubmissions', label:'YtD Submissions', type:'num', cell: r => num(r.ytdSubmissions) },
+  { key:'tier', label:'Subscription Level', type:'text',
+    cell: r => `<select class="inline" data-sub-company="${esc(r.id)}" data-sub-field="tier">
+      ${Object.entries(TIER_LABEL).map(([v,l]) => `<option value="${v}" ${r.tier===v?'selected':''}>${esc(l)}</option>`).join('')}
+    </select>` },
+  { key:'paymentStatus', label:'Payment Status', type:'text',
+    cell: r => `<select class="inline" data-sub-company="${esc(r.id)}" data-sub-field="status">
+      ${Object.entries(PAY_LABEL).map(([v,l]) => `<option value="${v}" ${r.paymentStatus===v?'selected':''}>${esc(l)}</option>`).join('')}
+    </select>` },
+];
+
+const renderCompanies = makeTable({
+  wrapId: 'companies-wrap', state: companiesState, columns: COMPANY_COLUMNS,
+  searchKeys: ['name','id','tier','paymentStatus'],
+  emptyMsg: 'No companies seeded yet.', countId: 'companies-count',
+});
+
 async function loadCompanies() {
-  const rows = await fetch('/api/admin/companies').then(r => r.json());
-  const wrap = document.getElementById('companies-wrap');
-  if (!rows.length) { wrap.innerHTML = '<div class="empty">No companies seeded yet.</div>'; return; }
-  wrap.innerHTML = `<table>
-    <thead><tr>
-      <th>ID</th><th>Name</th><th>Pack</th><th>Config Updated</th><th>Registered</th>
-    </tr></thead>
-    <tbody>${rows.map(r => `<tr>
-      <td><code>${r.id}</code></td>
-      <td>${r.name}</td>
-      <td>${r.pack ? packSummary(r.pack) : '<span style="color:var(--muted)">—</span>'}</td>
-      <td class="ts">${fmt(r.configUpdatedAt)}</td>
-      <td class="ts">${fmt(r.createdAt)}</td>
-    </tr>`).join('')}</tbody>
-  </table>`;
+  await guard('companies-wrap', async () => {
+    const rows = await loadJson('/api/admin/companies');
+    if (!Array.isArray(rows)) throw new Error('Unexpected response shape from /api/admin/companies');
+    companiesState.data = rows;
+    renderCompanies();
+  });
 }
 
-function packSummary(pack) {
-  const parts = [];
-  if (pack.branding?.companyName) parts.push(pack.branding.companyName);
-  if (pack.pricing) parts.push('Pricing ✓');
-  if (pack.methodology) parts.push('Methodology ✓');
-  return parts.length ? parts.join(' · ') : '<span style="color:var(--sub)">Configured</span>';
-}
+document.getElementById('companies-search').addEventListener('input', e => {
+  companiesState.search = e.target.value; renderCompanies();
+});
+
+// Inline subscription edits (manual until Stripe webhooks own these fields).
+document.addEventListener('change', async e => {
+  const sel = e.target.closest('[data-sub-company]');
+  if (!sel) return;
+  const id = sel.dataset.subCompany;
+  const row = companiesState.data.find(r => r.id === id);
+  if (!row) return;
+  const tier = sel.dataset.subField === 'tier' ? sel.value : row.tier;
+  const status = sel.dataset.subField === 'status' ? sel.value : row.paymentStatus;
+  try {
+    await loadJson(`/api/admin/companies/${encodeURIComponent(id)}/subscription`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier, status }),
+    });
+    row.tier = tier; row.paymentStatus = status;
+    toast(`${row.name}: ${TIER_LABEL[tier]} · ${PAY_LABEL[status]}`, 'var(--green)');
+  } catch (err) {
+    toast('Update failed: ' + err.message, 'var(--red)');
+    renderCompanies(); // revert the select to server truth
+  }
+});
 
 // ── States ────────────────────────────────────────────────────────────────────
 async function loadStates() {
-  const rows = await fetch('/api/admin/states').then(r => r.json());
-  const wrap = document.getElementById('states-wrap');
-  if (!rows.length) { wrap.innerHTML = '<div class="empty">No states seeded yet.</div>'; return; }
-  wrap.innerHTML = `<table>
-    <thead><tr>
-      <th>Code</th><th>Name</th><th>Go-Live</th><th>Reviewed At</th><th>Config Updated</th><th></th>
-    </tr></thead>
-    <tbody id="states-body">${rows.map(r => stateRow(r)).join('')}</tbody>
-  </table>`;
+  await guard('states-wrap', async () => {
+    const rows = await loadJson('/api/admin/states');
+    if (!Array.isArray(rows)) throw new Error('Unexpected response shape from /api/admin/states');
+    const wrap = document.getElementById('states-wrap');
+    if (!rows.length) { wrap.innerHTML = '<div class="empty">No states seeded yet.</div>'; return; }
+    wrap.innerHTML = `<table><thead><tr><th>Code</th><th>Name</th><th>Go-Live</th><th>Reviewed At</th><th>Config Updated</th><th></th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td><code>${esc(r.code)}</code></td><td>${esc(r.name)}</td>
+        <td>${goLiveBadge(r.reviewedAt)}</td><td class="ts">${fmt(r.reviewedAt)}</td><td class="ts">${fmt(r.configUpdatedAt)}</td>
+        <td style="text-align:right">${r.reviewedAt
+          ? `<button class="btn-danger btn-sm" data-golive="${esc(r.code)}" data-enable="0">Revoke</button>`
+          : `<button class="btn-primary btn-sm" data-golive="${esc(r.code)}" data-enable="1">Set Go-Live</button>`}</td>
+      </tr>`).join('')}</tbody></table>`;
+  });
 }
 
-function stateRow(r) {
-  const canGoLive = !r.reviewedAt;
-  return `<tr id="state-row-${r.code}">
-    <td><code>${r.code}</code></td>
-    <td>${r.name}</td>
-    <td>${goLiveBadge(r.reviewedAt)}</td>
-    <td class="ts">${fmt(r.reviewedAt)}</td>
-    <td class="ts">${fmt(r.configUpdatedAt)}</td>
-    <td style="text-align:right">
-      ${canGoLive
-        ? `<button class="btn-primary btn-sm" onclick="setGoLive('${r.code}', true)">Set Go-Live</button>`
-        : `<button class="btn-danger btn-sm" onclick="setGoLive('${r.code}', false)">Revoke</button>`
-      }
-    </td>
-  </tr>`;
-}
-
-async function setGoLive(code, enable) {
-  const method = enable ? 'POST' : 'DELETE';
-  const res = await fetch(`/api/admin/states/${code}/go-live`, { method });
-  const data = await res.json();
-  if (!data.ok) { toast('Request failed', 'var(--red)'); return; }
-  toast(enable ? `${code} marked go-live` : `${code} go-live revoked`, enable ? 'var(--green)' : 'var(--yellow)');
-  loaded['states'] = false;
-  loadPage('states', true);
-}
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-golive]');
+  if (!btn) return;
+  const code = btn.dataset.golive;
+  const enable = btn.dataset.enable === '1';
+  try {
+    await loadJson(`/api/admin/states/${encodeURIComponent(code)}/go-live`, { method: enable ? 'POST' : 'DELETE' });
+    toast(enable ? `${code} marked go-live` : `${code} go-live revoked`, enable ? 'var(--green)' : 'var(--yellow)');
+    loadPage('states', true);
+  } catch (err) { toast('Request failed: ' + err.message, 'var(--red)'); }
+});
 
 // ── Submissions ───────────────────────────────────────────────────────────────
+const submissionsState = { data: [], sortKey: 'receivedAt', sortDir: 'desc', search: '' };
+
+const SUBMISSION_COLUMNS = [
+  { key:'inspectionId', label:'Inspection ID', type:'text', cell: r => `<code title="${esc(r.inspectionId)}">${esc(trunc(r.inspectionId,20))}</code>` },
+  { key:'companyId', label:'Company', type:'text', cell: r => esc(r.companyId) },
+  { key:'stateCode', label:'State', type:'text', cell: r => esc(r.stateCode) },
+  { key:'status', label:'Status', type:'text', cell: r => statusBadge(r.status) },
+  { key:'packageRef', label:'Package', type:'text', cell: r => r.packageRef
+      ? `<a href="/submissions/${esc(r.id)}/package" style="color:var(--accent);font-size:12px">Download</a>`
+      : '<span style="color:var(--muted)">—</span>' },
+  { key:'receivedAt', label:'Received', type:'text', cell: r => `<span class="ts">${fmt(r.receivedAt)}</span>` },
+];
+
+const renderSubmissions = makeTable({
+  wrapId: 'submissions-wrap', state: submissionsState, columns: SUBMISSION_COLUMNS,
+  searchKeys: ['inspectionId','companyId','stateCode','status'],
+  emptyMsg: 'No submissions yet.', countId: 'submissions-count',
+});
+
 async function loadSubmissions() {
-  const data = await fetch('/api/admin/submissions').then(r => r.json());
-  const { rows, counts } = data;
-
-  // Count cards
-  const order = ['received','validating','package_ready','rejected'];
-  const map = Object.fromEntries(counts.map(c => [c.status, Number(c.n)]));
-  const colors = { received:'blue', validating:'yellow', package_ready:'green', rejected:'red' };
-  const labels = { received:'Received', validating:'Validating', package_ready:'Package Ready', rejected:'Rejected' };
-  document.getElementById('sub-counts').innerHTML = order.map(s =>
-    `<div class="card"><div class="card-label">${labels[s]}</div><div class="card-value ${colors[s]}">${map[s] || 0}</div></div>`
-  ).join('');
-
-  const wrap = document.getElementById('submissions-wrap');
-  if (!rows.length) { wrap.innerHTML = '<div class="empty">No submissions yet.</div>'; return; }
-  wrap.innerHTML = `<table>
-    <thead><tr>
-      <th>Inspection ID</th><th>Company</th><th>State</th><th>Protocol</th><th>Status</th><th>Package</th><th>Received</th>
-    </tr></thead>
-    <tbody>${rows.map(r => `<tr>
-      <td><code title="${r.inspectionId}">${trunc(r.inspectionId,20)}</code></td>
-      <td>${r.companyId}</td>
-      <td>${r.stateCode}</td>
-      <td><code>${r.protocolVersion}</code></td>
-      <td>${statusBadge(r.status)}</td>
-      <td>${r.packageRef
-        ? `<a href="/submissions/${r.id}/package" style="color:var(--accent);font-size:12px">Download</a>`
-        : '<span style="color:var(--muted)">—</span>'
-      }</td>
-      <td class="ts">${fmt(r.receivedAt)}</td>
-    </tr>`).join('')}</tbody>
-  </table>`;
+  await guard('submissions-wrap', async () => {
+    const data = await loadJson('/api/admin/submissions');
+    const rows = data?.rows, counts = data?.counts;
+    if (!Array.isArray(rows)) throw new Error('Unexpected response shape from /api/admin/submissions');
+    const order = ['received','validating','package_ready','rejected'];
+    const map = Object.fromEntries((counts || []).map(c => [c.status, Number(c.n)]));
+    const colors = { received:'blue', validating:'yellow', package_ready:'green', rejected:'red' };
+    const labels = { received:'Received', validating:'Validating', package_ready:'Package Ready', rejected:'Rejected' };
+    document.getElementById('sub-counts').innerHTML = order.map(s =>
+      `<div class="card"><div class="card-label">${labels[s]}</div><div class="card-value ${colors[s]}">${map[s] || 0}</div></div>`).join('');
+    submissionsState.data = rows;
+    renderSubmissions();
+  });
 }
+document.getElementById('submissions-search').addEventListener('input', e => {
+  submissionsState.search = e.target.value; renderSubmissions();
+});
 
 // ── NOAA ──────────────────────────────────────────────────────────────────────
 async function loadNoaa() {
-  const data = await fetch('/api/admin/noaa').then(r => r.json());
-  const { coverage, runs, eventCount } = data;
+  await guard('noaa-coverage-wrap', async () => {
+    const data = await loadJson('/api/admin/noaa');
+    const { coverage = [], runs = [], eventCount = 0 } = data || {};
+    document.getElementById('noaa-count').textContent = num(eventCount);
+    document.getElementById('noaa-counties').textContent = coverage.length;
 
-  document.getElementById('noaa-count').textContent = Number(eventCount).toLocaleString();
-  document.getElementById('noaa-counties').textContent = coverage.length;
+    const covWrap = document.getElementById('noaa-coverage-wrap');
+    covWrap.innerHTML = !coverage.length
+      ? '<div class="empty">No counties tracked yet. Run <code>pnpm run noaa backfill STATE:County</code> to add one.</div>'
+      : `<table><thead><tr><th>State</th><th>County</th><th>Added</th><th>Last Backfilled</th><th>Latest File</th></tr></thead>
+        <tbody>${coverage.map(c => `<tr><td>${esc(c.stateAbbr)}</td><td>${esc(c.countyName)}</td>
+          <td class="ts">${fmt(c.addedAt)}</td><td class="ts">${fmt(c.lastBackfilledAt)}</td>
+          <td><code>${esc(c.lastFileCreated || '—')}</code></td></tr>`).join('')}</tbody></table>`;
 
-  // Coverage table
-  const covWrap = document.getElementById('noaa-coverage-wrap');
-  if (!coverage.length) {
-    covWrap.innerHTML = '<div class="empty">No counties tracked yet. Run <code>pnpm run noaa backfill STATE:County</code> to add one.</div>';
-  } else {
-    covWrap.innerHTML = `<table>
-      <thead><tr><th>State</th><th>County</th><th>Added</th><th>Last Backfilled</th><th>Latest File</th></tr></thead>
-      <tbody>${coverage.map(c => `<tr>
-        <td>${c.stateAbbr}</td>
-        <td>${c.countyName}</td>
-        <td class="ts">${fmt(c.addedAt)}</td>
-        <td class="ts">${fmt(c.lastBackfilledAt)}</td>
-        <td><code>${c.lastFileCreated || '—'}</code></td>
-      </tr>`).join('')}</tbody>
-    </table>`;
+    const runsWrap = document.getElementById('noaa-runs-wrap');
+    runsWrap.innerHTML = !runs.length
+      ? '<div class="empty">No ingest runs recorded yet.</div>'
+      : `<table><thead><tr><th>Kind</th><th>Started</th><th>Finished</th><th>Upserted</th><th>Pruned</th><th>Note</th></tr></thead>
+        <tbody>${runs.map(r => `<tr><td><span class="badge ${r.kind === 'monthly' ? 'badge-blue' : 'badge-muted'}">${esc(r.kind)}</span></td>
+          <td class="ts">${fmt(r.startedAt)}</td><td class="ts">${fmt(r.finishedAt)}</td>
+          <td>${r.rowsUpserted ?? '—'}</td><td>${r.rowsPruned ?? '—'}</td>
+          <td style="color:var(--sub)">${esc(r.note || '—')}</td></tr>`).join('')}</tbody></table>`;
+  });
+}
+
+// ── Documents ─────────────────────────────────────────────────────────────────
+const documentsState = { data: [], sortKey: 'kind', sortDir: 'asc', search: '' };
+const KIND_LABEL = { report_template:'Report Template', preliminary_template:'Preliminary Template', state_legal:'State Legal', code_document:'Code Document', user_guide:'User Guide' };
+
+const DOCUMENT_COLUMNS = [
+  { key:'name', label:'Document', type:'text', cell: r => `<strong>${esc(r.name)}</strong><br><code>${esc(r.key)}</code>` },
+  { key:'kind', label:'Kind', type:'text', cell: r => esc(KIND_LABEL[r.kind] || r.kind) },
+  { key:'scope', label:'Scope', type:'text', cell: r => esc(r.scope + (r.scopeRef ? ` · ${r.scopeRef}` : '')) },
+  { key:'version', label:'Version', type:'num', cell: r => `v${r.version}` },
+  { key:'active', label:'Status', type:'text', sortVal: r => r.active ? '0' : '1',
+    cell: r => r.active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-muted">Archived</span>' },
+  { key:'updatedAt', label:'Updated', type:'text', cell: r => `<span class="ts">${fmt(r.updatedAt)}</span>` },
+  { key:'_actions', label:'', type:'text', sortVal: () => '',
+    cell: r => `<div style="text-align:right;white-space:nowrap">
+      <button class="btn-ghost btn-sm" data-doc-view="${esc(r.id)}">View</button>
+      ${r.active ? '' : `<button class="btn-primary btn-sm" data-doc-activate="${esc(r.id)}">Activate</button>`}
+    </div>` },
+];
+
+const renderDocuments = makeTable({
+  wrapId: 'documents-wrap', state: documentsState, columns: DOCUMENT_COLUMNS,
+  searchKeys: ['name','key','kind','scope','scopeRef'],
+  emptyMsg: 'No documents yet. Templates and state legal/code docs will appear here once seeded.',
+  countId: 'documents-count',
+});
+
+async function loadDocuments() {
+  await guard('documents-wrap', async () => {
+    const rows = await loadJson('/api/admin/documents');
+    if (!Array.isArray(rows)) throw new Error('Unexpected response shape from /api/admin/documents');
+    documentsState.data = rows;
+    renderDocuments();
+    document.getElementById('doc-editor-host').innerHTML = '';
+  });
+}
+document.getElementById('documents-search').addEventListener('input', e => {
+  documentsState.search = e.target.value; renderDocuments();
+});
+
+document.addEventListener('click', async e => {
+  const view = e.target.closest('[data-doc-view]');
+  const act = e.target.closest('[data-doc-activate]');
+  if (view) {
+    try {
+      const doc = await loadJson('/api/admin/documents/' + encodeURIComponent(view.dataset.docView));
+      const host = document.getElementById('doc-editor-host');
+      host.innerHTML = `<div class="doc-editor">
+        <div class="row">
+          <span class="title">${esc(doc.name)} <code>v${doc.version}</code></span>
+          <span class="badge ${doc.active ? 'badge-green' : 'badge-muted'}">${doc.active ? 'Active' : 'Archived'}</span>
+          <span style="margin-left:auto"></span>
+          <button class="btn-primary btn-sm" id="doc-save">Save as new version</button>
+          <button class="btn-ghost btn-sm" id="doc-close">Close</button>
+        </div>
+        <textarea id="doc-body" spellcheck="false">${esc(doc.body || '')}</textarea>
+        <p style="font-size:11.5px;color:var(--sub);margin-top:8px">
+          Saving creates <strong>v${doc.version + 1}</strong> and leaves v${doc.version} intact. Activate it from the table when you're ready.
+        </p></div>`;
+      host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('doc-close').addEventListener('click', () => { host.innerHTML = ''; });
+      document.getElementById('doc-save').addEventListener('click', async () => {
+        try {
+          await loadJson('/api/admin/documents', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ kind: doc.kind, scope: doc.scope, scopeRef: doc.scopeRef, key: doc.key,
+              name: doc.name, contentType: doc.contentType, body: document.getElementById('doc-body').value }),
+          });
+          toast('Saved new version of ' + doc.name, 'var(--green)');
+          loadPage('documents', true);
+        } catch (err) { toast('Save failed: ' + err.message, 'var(--red)'); }
+      });
+    } catch (err) { toast('Could not open document: ' + err.message, 'var(--red)'); }
+    return;
   }
-
-  // Ingest runs table
-  const runsWrap = document.getElementById('noaa-runs-wrap');
-  if (!runs.length) {
-    runsWrap.innerHTML = '<div class="empty">No ingest runs recorded yet.</div>';
-  } else {
-    runsWrap.innerHTML = `<table>
-      <thead><tr><th>Kind</th><th>Started</th><th>Finished</th><th>Upserted</th><th>Pruned</th><th>Note</th></tr></thead>
-      <tbody>${runs.map(r => `<tr>
-        <td><span class="badge ${r.kind === 'monthly' ? 'badge-blue' : 'badge-muted'}">${r.kind}</span></td>
-        <td class="ts">${fmt(r.startedAt)}</td>
-        <td class="ts">${fmt(r.finishedAt)}</td>
-        <td>${r.rowsUpserted ?? '—'}</td>
-        <td>${r.rowsPruned ?? '—'}</td>
-        <td style="color:var(--sub)">${r.note || '—'}</td>
-      </tr>`).join('')}</tbody>
-    </table>`;
+  if (act) {
+    try {
+      await loadJson('/api/admin/documents/' + encodeURIComponent(act.dataset.docActivate) + '/activate', { method: 'POST' });
+      toast('Version activated', 'var(--green)');
+      loadPage('documents', true);
+    } catch (err) { toast('Activate failed: ' + err.message, 'var(--red)'); }
   }
+});
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+async function loadSettings() {
+  await guard('settings-host', async () => {
+    const s = await loadJson('/api/admin/settings');
+    const secretRow = ([k, v]) => `<tr><td><code>${esc(k)}</code></td>
+      <td>${v ? '<span class="badge badge-green">Configured</span>' : '<span class="badge badge-yellow">Not set</span>'}</td></tr>`;
+    const priceRow = ([tier, p]) => `<tr><td>${esc(TIER_LABEL[tier] || tier)}</td>
+      <td class="num">$${p.base}/mo</td><td class="num">$${p.perReport}/report</td></tr>`;
+
+    document.getElementById('settings-host').innerHTML = `
+      <div class="section-head"><h2>AI Generation</h2><button class="btn-ghost btn-sm" data-refresh="settings">Refresh</button></div>
+      <div class="table-wrap"><div style="padding:16px 18px"><dl class="kv">
+        <dt>Model</dt><dd><code>${esc(s.ai.model)}</code></dd>
+        <dt>Temperature</dt><dd>${esc(s.ai.temperature)}</dd>
+        <dt>Max retries</dt><dd>${esc(s.ai.maxRetries)}</dd>
+        <dt>Gateway</dt><dd>${s.ai.gatewayMode === 'replit_managed'
+          ? '<span class="badge badge-blue">Replit managed</span>' : '<span class="badge badge-muted">Direct Google</span>'}</dd>
+      </dl></div></div>
+
+      <div class="section-head"><h2>Service</h2></div>
+      <div class="table-wrap"><div style="padding:16px 18px"><dl class="kv">
+        <dt>Environment</dt><dd><code>${esc(s.service.nodeEnv)}</code></dd>
+        <dt>Port</dt><dd>${esc(s.service.port)}</dd>
+      </dl></div></div>
+
+      <div class="section-head"><h2>Secrets</h2></div>
+      <p class="page-sub" style="margin-bottom:12px">Presence only — values are never returned by the API.</p>
+      <div class="table-wrap"><table><thead><tr><th>Variable</th><th>Status</th></tr></thead>
+        <tbody>${Object.entries(s.secrets).map(secretRow).join('')}</tbody></table></div>
+
+      <div class="section-head"><h2>Published Pricing</h2></div>
+      <div class="table-wrap"><table><thead><tr><th>Tier</th><th class="num">Base</th><th class="num">Per report</th></tr></thead>
+        <tbody>${Object.entries(s.pricing).map(priceRow).join('')}</tbody></table></div>`;
+  });
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
-loadPage('overview');
+showPage('overview');
 </script>
 </body>
 </html>

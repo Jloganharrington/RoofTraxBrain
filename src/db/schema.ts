@@ -1,4 +1,14 @@
-import { pgTable, text, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  jsonb,
+  integer,
+  doublePrecision,
+  bigint,
+  index,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import type { CompanyPack, StatePack } from '../tenancy/types.js';
 import type {
@@ -60,8 +70,85 @@ export const submissionsTable = pgTable('submissions', {
   packagedAt: timestamp('packaged_at', { withTimezone: true }),
 });
 
+// ---- NOAA Storm Events: rolling 24-month severe-weather corpus ----
+// Ingested from NCEI bulk `StormEvents_details` files, filtered to serviced
+// counties. A monthly job re-pulls recent years (for NOAA's revisions) and
+// prunes anything older than 24 months, so the table is a trailing window.
+
+export const stormEventsTable = pgTable(
+  'storm_events',
+  {
+    eventId: text('event_id').primaryKey(), // NOAA EVENT_ID
+    episodeId: text('episode_id'),
+    state: text('state').notNull(), // 'VIRGINIA'
+    stateFips: text('state_fips').notNull(), // '51'
+    czType: text('cz_type').notNull(), // 'C' county | 'Z' forecast zone
+    czFips: text('cz_fips').notNull(),
+    czName: text('cz_name').notNull(), // normalized upper, e.g. 'FAIRFAX'
+    wfo: text('wfo'), // 'LWX'
+    eventType: text('event_type').notNull(), // 'Thunderstorm Wind' | 'Hail' | ...
+    beginLocal: timestamp('begin_local', { withTimezone: false, mode: 'string' }).notNull(), // local wall time 'YYYY-MM-DDTHH:mm:ss'
+    czTimezone: text('cz_timezone'), // 'EST-5'
+    magnitude: doublePrecision('magnitude'), // NORMALIZED: wind=mph, hail=inches
+    magnitudeUnit: text('magnitude_unit'), // 'mph' | 'in' | null
+    magnitudeType: text('magnitude_type'), // 'EG' | 'MG' | 'MS' | 'ES'
+    magnitudeRaw: doublePrecision('magnitude_raw'), // raw NOAA value (knots for wind)
+    torFScale: text('tor_f_scale'),
+    damageProperty: bigint('damage_property', { mode: 'number' }), // USD
+    source: text('source'), // report source, e.g. 'Mesonet'
+    beginRange: doublePrecision('begin_range'),
+    beginAzimuth: text('begin_azimuth'),
+    beginLocation: text('begin_location'),
+    beginLat: doublePrecision('begin_lat'),
+    beginLon: doublePrecision('begin_lon'),
+    episodeNarrative: text('episode_narrative'),
+    eventNarrative: text('event_narrative'),
+    fileYear: integer('file_year').notNull(), // data year of the source file
+    fileCreated: text('file_created').notNull(), // cYYYYMMDD stamp of the source file
+    ingestedAt: timestamp('ingested_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byBeginLocal: index('storm_events_begin_local_idx').on(t.beginLocal),
+    byCounty: index('storm_events_county_idx').on(t.stateFips, t.czFips),
+    byLatLon: index('storm_events_latlon_idx').on(t.beginLat, t.beginLon),
+  }),
+);
+
+// The serviced-county set the corpus is maintained for. Written when a company
+// adds a service county; the nightly reconciler backfills any gaps.
+export const countyCoverageTable = pgTable(
+  'county_coverage',
+  {
+    id: text('id').primaryKey().default(sql`gen_random_uuid()`),
+    stateAbbr: text('state_abbr').notNull(), // 'VA'
+    stateFips: text('state_fips').notNull(), // '51'
+    countyName: text('county_name').notNull(), // normalized upper, e.g. 'FAIRFAX'
+    addedAt: timestamp('added_at', { withTimezone: true }).notNull().defaultNow(),
+    lastBackfilledAt: timestamp('last_backfilled_at', { withTimezone: true }),
+    lastFileCreated: text('last_file_created'), // newest cYYYYMMDD stamp ingested
+  },
+  (t) => ({
+    uniqCounty: uniqueIndex('county_coverage_uniq').on(t.stateFips, t.countyName),
+  }),
+);
+
+// Ingest-run audit trail (observability for the scheduled jobs).
+export const noaaIngestRunsTable = pgTable('noaa_ingest_runs', {
+  id: text('id').primaryKey().default(sql`gen_random_uuid()`),
+  kind: text('kind').notNull(), // 'backfill' | 'monthly'
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+  filesProcessed: jsonb('files_processed').$type<string[]>(),
+  rowsUpserted: integer('rows_upserted'),
+  rowsPruned: integer('rows_pruned'),
+  note: text('note'),
+});
+
 export type CompanyRow = typeof companiesTable.$inferSelect;
 export type StateRow = typeof statesTable.$inferSelect;
+export type StormEventRow = typeof stormEventsTable.$inferSelect;
+export type CountyCoverageRow = typeof countyCoverageTable.$inferSelect;
+export type NoaaIngestRunRow = typeof noaaIngestRunsTable.$inferSelect;
 export type CompanyConfigRow = typeof companyConfigTable.$inferSelect;
 export type StateConfigRow = typeof stateConfigTable.$inferSelect;
 export type SubmissionRow = typeof submissionsTable.$inferSelect;

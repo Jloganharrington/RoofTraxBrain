@@ -5,7 +5,35 @@ import { assemblePackage } from '../packages/build.js';
 import { LocalPackageStore } from '../packages/store.js';
 import { HttpPhotoFetcher } from '../integrity/photoFetcher.js';
 import { deliverReportToCrm, pendingCrmConfig } from '../crm/ingest.js';
+import { resolveStormOfRecord, toStormBlock } from '../weather/noaa/query.js';
+import type { SubmittedInspection } from '../submissions/types.js';
 import { env } from '../env.js';
+
+// Phase-2 authoritative upgrade: if the ingested NOAA Storm Events corpus has a
+// qualifying storm of record for this property + date of loss, overlay it onto
+// the inspection's storm block (which otherwise holds the Phase-1 VisualCrossing
+// event). Best-effort: any failure (empty corpus, no coordinates, DB down) falls
+// back to the submitted storm so the package never fails on this account.
+async function withAuthoritativeStorm(
+  inspection: SubmittedInspection,
+  stateCode: string,
+): Promise<SubmittedInspection> {
+  try {
+    const dateOfLoss = inspection.property.dateOfLoss;
+    if (!dateOfLoss) return inspection;
+    const geo = inspection.photos.find((p) => p.gpsLat != null && p.gpsLng != null);
+    const resolved = await resolveStormOfRecord({
+      lat: geo?.gpsLat ?? null,
+      lng: geo?.gpsLng ?? null,
+      dateOfLoss,
+      state: stateCode,
+    });
+    if (!resolved) return inspection;
+    return { ...inspection, storm: toStormBlock(resolved) };
+  } catch {
+    return inspection; // never block a package on the enrichment lookup
+  }
+}
 
 export const packagesRouter: Router = Router();
 
@@ -41,7 +69,8 @@ packagesRouter.post('/submissions/:id/package', async (req, res) => {
 
   await setStatus(sub.id, 'validating');
   const fetcher = new HttpPhotoFetcher(env.OBJECT_STORAGE_BASE_URL);
-  const result = await assemblePackage(sub.inspection, config, sub.manifest, fetcher);
+  const inspection = await withAuthoritativeStorm(sub.inspection, sub.stateCode);
+  const result = await assemblePackage(inspection, config, sub.manifest, fetcher);
 
   if (!result.ok) {
     await setStatus(sub.id, 'rejected');

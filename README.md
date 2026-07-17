@@ -29,6 +29,41 @@ The full A–L package renders end to end from a fixture (`npm run sample` →
 `tsx scripts/verify-b7.ts` verifies the chain-of-custody re-hash both ways
 (matching bytes pass, tampered/unfetchable bytes reject) + the package store.
 
+## NOAA Storm Events — authoritative Phase-2 storm of record
+
+A rolling 24-month corpus of NOAA/NCEI **Storm Events** (the official "Storm Data"
+archive) ingested from the public NCEI bulk files, filtered to serviced counties.
+It upgrades Exhibit D from the Phase-1 VisualCrossing event to the authoritative
+record — exact local time, coordinates, WFO + **Event ID**, the verbatim damage
+narrative, and the episode-level meteorological synopsis. Wind magnitude is
+converted knots→mph; eligibility uses NWS **severe** thresholds (hail ≥ 1.0″,
+wind ≥ 58 mph, any tornado).
+
+- **Fetch nationwide, store service-area-only.** NCEI ships one national file per
+  year; the ingest streams it and keeps only serviced-county rows. A 24-month
+  window spans ≤ 3 year files (~28 MB gzipped total).
+- **Cycling window.** `backfillCounty()` runs when a county is added; the monthly
+  `monthlyRefresh()` re-pulls the current + prior year (absorbing NOAA's revisions),
+  upserts by `EVENT_ID`, and prunes anything older than 24 months.
+- **Publication lag.** NCEI finalizes with a ~2–4 month lag, so the trailing edge
+  is sparse — VisualCrossing remains the Phase-1 / recent-storm source; this is the
+  later authoritative upgrade, applied best-effort at package build (falls back to
+  the submitted storm if the corpus has no match).
+
+```bash
+npm run verify:noaa            # end-to-end offline proof from the bundled fixture (no DB/network)
+npm run noaa list              # list newest NCEI details files (directory read only)
+npm run noaa backfill VA:Fairfax   # add + backfill a county — LIVE download, needs DATABASE_URL
+npm run noaa monthly           # refresh recent years + prune — LIVE download, needs DATABASE_URL
+```
+
+`src/weather/noaa/` is pure/DB-split: `parse` (bulk CSV), `states` (FIPS +
+county normalization), `coverage` (service-area filter), `select` (severe gate +
+Haversine + storm-of-record ranking), `summary` adapter, `store` (Drizzle
+upsert/prune/query), `fetch` (the only network I/O), `ingest` (jobs), `query`
+(render-time lookup). Parser + selector are unit-tested against a real bulk-format
+fixture (`npm test`).
+
 ## Deferred (do not forget)
 
 - **B6 — AI exhibits F/G/M.** Repairability/matching narrative, manufacturer

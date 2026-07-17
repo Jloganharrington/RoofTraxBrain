@@ -19,10 +19,13 @@ export const env = {
   OBJECT_STORAGE_BASE_URL: optional('OBJECT_STORAGE_BASE_URL'),
   NODE_ENV: optional('NODE_ENV', 'development'),
 
-  // B6 — AI narrative generation. Optional at boot; the package route 503s if
-  // GEMINI_API_KEY is absent at call time (same pattern as OBJECT_STORAGE_BASE_URL).
-  // Verify the exact model id string in Google AI Studio before setting GEMINI_MODEL.
-  GEMINI_API_KEY: optional('GEMINI_API_KEY'),
+  // B6 — AI narrative generation via Replit's managed Gemini integration
+  // (AI_INTEGRATIONS_GEMINI_* are auto-provisioned; the "API key" is an opaque
+  // token valid only against the gateway base URL). A plain GEMINI_API_KEY
+  // (direct Google endpoint, no base URL) still works as a fallback.
+  // Optional at boot; the package route 503s if absent at call time.
+  GEMINI_API_KEY: optional('AI_INTEGRATIONS_GEMINI_API_KEY') || optional('GEMINI_API_KEY'),
+  GEMINI_BASE_URL: optional('AI_INTEGRATIONS_GEMINI_BASE_URL'),
   GEMINI_MODEL: optional('GEMINI_MODEL', 'gemini-2.5-pro'),
   GEMINI_TEMPERATURE: optional('GEMINI_TEMPERATURE', '0.2'),
   AI_MAX_RETRIES: Number(optional('AI_MAX_RETRIES', '2')),

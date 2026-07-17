@@ -58,7 +58,8 @@ pnpm run db:seed       # re-seed company/state config
 | `NODE_ENV` | — | `development` |
 | `VISUALCROSSING_API_KEY` | optional | Weather engine (Exhibit D) |
 | `OBJECT_STORAGE_BASE_URL` | optional | Photo re-hash / chain of custody |
-| `GEMINI_API_KEY` | for B6 | Via Replit-managed Google AI integration; package route 503s without it |
+| `AI_INTEGRATIONS_GEMINI_BASE_URL` / `_API_KEY` | for B6 | Auto-provisioned by Replit's managed Gemini integration (do not edit) |
+| `GEMINI_API_KEY` | fallback | Only if using a personal Google key instead of the managed integration |
 | `GEMINI_MODEL` | — | Default `gemini-2.5-pro` |
 | `GEMINI_TEMPERATURE` | — | Default `0.2` |
 | `AI_MAX_RETRIES` | — | Default `2` |

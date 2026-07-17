@@ -24,7 +24,14 @@ export class GeminiGenerator {
     if (!env.GEMINI_API_KEY) {
       throw new GeminiGenerationError('GEMINI_API_KEY is not configured');
     }
-    this.ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+    this.ai = new GoogleGenAI({
+      apiKey: env.GEMINI_API_KEY,
+      // Replit-managed integration proxies through its own gateway. The gateway
+      // expects paths without the SDK's default /v1beta prefix (apiVersion: '').
+      ...(env.GEMINI_BASE_URL
+        ? { httpOptions: { baseUrl: env.GEMINI_BASE_URL, apiVersion: '' } }
+        : {}),
+    });
   }
 
   async generate(input: GenerationInput): Promise<ForensicNarratives> {

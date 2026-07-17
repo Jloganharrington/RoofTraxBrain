@@ -10,6 +10,16 @@ Standalone, tenant- and state-aware Node/TypeScript service that turns a submitt
 - **PDF:** `pdf-lib`
 - **Validation:** Zod
 
+## Admin Dashboard
+
+A built-in admin UI is served at `/` (port 5000). It provides:
+
+- **Overview** — live service/DB health, submission counts, states go-live status
+- **Companies** — registered tenants and their config packs
+- **States** — counsel-review go-live toggle (`reviewedAt` stamp) per state
+- **Submissions** — last 50 inspection envelopes with status and download links
+- **NOAA Weather** — storm events corpus size, county coverage, ingest run history
+
 ## Running on Replit
 
 The **"Start application"** workflow runs `pnpm run dev` and listens on port 5000.

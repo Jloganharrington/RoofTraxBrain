@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoofTrax Brain — Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #181c25;
+      --border:   #272d3d;
+      --muted:    #3d4559;
+      --text:     #e2e8f0;
+      --sub:      #8892a4;
+      --accent:   #3b82f6;
+      --accent-d: #2563eb;
+      --green:    #22c55e;
+      --yellow:   #f59e0b;
+      --red:      #ef4444;
+      --radius:   8px;
+      --sidebar:  220px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    aside {
+      width: var(--sidebar);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-mark {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--sub);
+    }
+    .logo-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 2px;
+    }
+
+    nav { padding: 10px 8px; flex: 1; }
+    nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: var(--sub);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+      margin-bottom: 2px;
+    }
+    nav a:hover { background: var(--border); color: var(--text); }
+    nav a.active { background: rgba(59,130,246,.15); color: var(--accent); }
+    nav a svg { flex-shrink: 0; opacity: .8; }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .status-dot.ok { background: var(--green); }
+    .status-dot.err { background: var(--red); }
+
+    /* ── Main ── */
+    main {
+      margin-left: var(--sidebar);
+      flex: 1;
+      padding: 28px 32px;
+      max-width: 1100px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .page-sub { color: var(--sub); font-size: 13px; margin-bottom: 24px; }
+
+    /* ── Cards ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+    .card-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+    .card-value { font-size: 26px; font-weight: 700; line-height: 1; }
+    .card-value.green { color: var(--green); }
+    .card-value.yellow { color: var(--yellow); }
+    .card-value.red { color: var(--red); }
+    .card-value.blue { color: var(--accent); }
+    .card-note { font-size: 12px; color: var(--sub); margin-top: 6px; }
+
+    /* ── Section header ── */
+    .section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-head h2 { font-size: 15px; font-weight: 600; }
+
+    /* ── Tables ── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--sub);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,.02); }
+    tbody td { padding: 10px 14px; vertical-align: middle; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 2px 9px; border-radius: 99px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-green  { background: rgba(34,197,94,.12);  color: var(--green); }
+    .badge-yellow { background: rgba(245,158,11,.12); color: var(--yellow); }
+    .badge-red    { background: rgba(239,68,68,.12);  color: var(--red); }
+    .badge-blue   { background: rgba(59,130,246,.12); color: var(--accent); }
+    .badge-muted  { background: var(--border);        color: var(--sub); }
+
+    .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+    /* ── Buttons ── */
+    button {
+      border: none; border-radius: 6px; cursor: pointer;
+      font-size: 12px; font-weight: 600; padding: 5px 12px;
+      transition: opacity .12s;
+    }
+    button:hover { opacity: .85; }
+    button:disabled { opacity: .4; cursor: default; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-danger  { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+    /* ── Empty state ── */
+    .empty {
+      padding: 40px;
+      text-align: center;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    /* ── Mono ── */
+    code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: .9em; color: var(--sub); }
+
+    /* ── Refresh ── */
+    .refresh-btn {
+      background: var(--border); color: var(--sub); padding: 5px 12px; font-size: 12px;
+    }
+    .refresh-btn:hover { color: var(--text); background: var(--muted); }
+
+    /* ── Spinner ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 10px 16px;
+      font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.4);
+      opacity: 0; transform: translateY(8px);
+      transition: opacity .2s, transform .2s;
+      pointer-events: none; z-index: 100;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    .ts { color: var(--sub); font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<aside>
+  <div class="logo">
+    <div class="logo-mark">RoofTrax</div>
+    <div class="logo-title">Brain Admin</div>
+  </div>
+  <nav>
+    <a class="active" data-page="overview" onclick="nav(this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Overview
+      <span class="status-dot" id="nav-health-dot"></span>
+    </a>
+    <a data-page="companies" onclick="nav(this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Companies
+    </a>
+    <a data-page="states" onclick="nav(this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+      States
+    </a>
+    <a data-page="submissions" onclick="nav(this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Submissions
+    </a>
+    <a data-page="noaa" onclick="nav(this)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+      NOAA Weather
+    </a>
+  </nav>
+</aside>
+
+<main>
+
+  <!-- ── Overview ── -->
+  <div id="page-overview" class="page active">
+    <h1>Overview</h1>
+    <p class="page-sub">System health and summary at a glance.</p>
+
+    <div class="cards" id="overview-cards">
+      <div class="card"><div class="card-label">Service</div><div class="card-value" id="ov-service"><span class="spinner"></span></div></div>
+      <div class="card"><div class="card-label">Database</div><div class="card-value" id="ov-db"><span class="spinner"></span></div></div>
+      <div class="card"><div class="card-label">Submissions</div><div class="card-value blue" id="ov-subs">—</div></div>
+      <div class="card"><div class="card-label">States Ready</div><div class="card-value" id="ov-states">—</div></div>
+    </div>
+
+    <div class="section-head"><h2>Recent Submissions</h2></div>
+    <div class="table-wrap" id="ov-table-wrap"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+
+  <!-- ── Companies ── -->
+  <div id="page-companies" class="page">
+    <h1>Companies</h1>
+    <p class="page-sub">Registered tenants and their configuration packs.</p>
+    <div class="table-wrap" id="companies-wrap"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+
+  <!-- ── States ── -->
+  <div id="page-states" class="page">
+    <h1>States</h1>
+    <p class="page-sub">State packs and counsel-review go-live status. A state must have a <code>reviewedAt</code> timestamp before packages can be generated.</p>
+    <div class="table-wrap" id="states-wrap"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+
+  <!-- ── Submissions ── -->
+  <div id="page-submissions" class="page">
+    <h1>Submissions</h1>
+    <p class="page-sub">Inspection envelopes received from RoofTraxMobile. Showing last 50.</p>
+    <div class="cards" id="sub-counts"></div>
+    <div class="table-wrap" id="submissions-wrap"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+
+  <!-- ── NOAA ── -->
+  <div id="page-noaa" class="page">
+    <h1>NOAA Weather</h1>
+    <p class="page-sub">Storm Events corpus coverage and ingest history.</p>
+
+    <div class="cards">
+      <div class="card"><div class="card-label">Storm Events</div><div class="card-value blue" id="noaa-count">—</div><div class="card-note">24-month rolling corpus</div></div>
+      <div class="card"><div class="card-label">Counties Tracked</div><div class="card-value" id="noaa-counties">—</div></div>
+    </div>
+
+    <div class="section-head"><h2>County Coverage</h2></div>
+    <div class="table-wrap" id="noaa-coverage-wrap"><div class="empty"><span class="spinner"></span></div></div>
+
+    <div class="section-head" style="margin-top:8px"><h2>Recent Ingest Runs</h2></div>
+    <div class="table-wrap" id="noaa-runs-wrap"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentPage = 'overview';
+let loaded = {};
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function nav(el) {
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  currentPage = el.dataset.page;
+  document.getElementById('page-' + currentPage).classList.add('active');
+  loadPage(currentPage);
+}
+
+function loadPage(page, force = false) {
+  if (loaded[page] && !force) return;
+  loaded[page] = true;
+  if (page === 'overview')    loadOverview();
+  if (page === 'companies')   loadCompanies();
+  if (page === 'states')      loadStates();
+  if (page === 'submissions') loadSubmissions();
+  if (page === 'noaa')        loadNoaa();
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, color = 'var(--text)') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.color = color;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmt = ts => ts ? new Date(ts).toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+const trunc = (s, n=28) => s && s.length > n ? s.slice(0,n)+'…' : (s || '—');
+
+function statusBadge(s) {
+  const map = {
+    received:      ['blue',   'Received'],
+    validating:    ['yellow', 'Validating'],
+    package_ready: ['green',  'Package Ready'],
+    rejected:      ['red',    'Rejected'],
+  };
+  const [cls, label] = map[s] || ['muted', s];
+  return `<span class="badge badge-${cls}">${label}</span>`;
+}
+
+function goLiveBadge(reviewedAt) {
+  if (reviewedAt) return `<span class="badge badge-green">Go-Live</span>`;
+  return `<span class="badge badge-yellow">Pending Review</span>`;
+}
+
+// ── Overview ──────────────────────────────────────────────────────────────────
+async function loadOverview() {
+  const [health, subs, states] = await Promise.all([
+    fetch('/api/admin/health').then(r => r.json()),
+    fetch('/api/admin/submissions').then(r => r.json()),
+    fetch('/api/admin/states').then(r => r.json()),
+  ]);
+
+  // Health dot
+  const dot = document.getElementById('nav-health-dot');
+  dot.className = 'status-dot ' + (health.ok ? 'ok' : 'err');
+
+  const ov = v => document.getElementById(v);
+  ov('ov-service').innerHTML = health.ok
+    ? '<span style="color:var(--green)">Online</span>'
+    : '<span style="color:var(--red)">Offline</span>';
+  ov('ov-db').innerHTML = health.db
+    ? '<span style="color:var(--green)">Connected</span>'
+    : '<span style="color:var(--red)">Error</span>';
+
+  const total = subs.rows.length;
+  ov('ov-subs').textContent = subs.counts.reduce((a,c) => a + Number(c.n), 0);
+
+  const goLive = states.filter(s => s.reviewedAt).length;
+  const statesEl = ov('ov-states');
+  statesEl.textContent = goLive + '/' + states.length;
+  statesEl.className = 'card-value ' + (goLive > 0 ? 'green' : 'yellow');
+
+  // Recent submissions table
+  const wrap = document.getElementById('ov-table-wrap');
+  const recent = subs.rows.slice(0, 10);
+  if (!recent.length) { wrap.innerHTML = '<div class="empty">No submissions yet.</div>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>Inspection ID</th><th>Company</th><th>State</th><th>Status</th><th>Received</th>
+    </tr></thead>
+    <tbody>${recent.map(r => `<tr>
+      <td><code>${trunc(r.inspectionId,24)}</code></td>
+      <td>${r.companyId}</td>
+      <td>${r.stateCode}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td class="ts">${fmt(r.receivedAt)}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ── Companies ─────────────────────────────────────────────────────────────────
+async function loadCompanies() {
+  const rows = await fetch('/api/admin/companies').then(r => r.json());
+  const wrap = document.getElementById('companies-wrap');
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">No companies seeded yet.</div>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>ID</th><th>Name</th><th>Pack</th><th>Config Updated</th><th>Registered</th>
+    </tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td><code>${r.id}</code></td>
+      <td>${r.name}</td>
+      <td>${r.pack ? packSummary(r.pack) : '<span style="color:var(--muted)">—</span>'}</td>
+      <td class="ts">${fmt(r.configUpdatedAt)}</td>
+      <td class="ts">${fmt(r.createdAt)}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function packSummary(pack) {
+  const parts = [];
+  if (pack.branding?.companyName) parts.push(pack.branding.companyName);
+  if (pack.pricing) parts.push('Pricing ✓');
+  if (pack.methodology) parts.push('Methodology ✓');
+  return parts.length ? parts.join(' · ') : '<span style="color:var(--sub)">Configured</span>';
+}
+
+// ── States ────────────────────────────────────────────────────────────────────
+async function loadStates() {
+  const rows = await fetch('/api/admin/states').then(r => r.json());
+  const wrap = document.getElementById('states-wrap');
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">No states seeded yet.</div>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>Code</th><th>Name</th><th>Go-Live</th><th>Reviewed At</th><th>Config Updated</th><th></th>
+    </tr></thead>
+    <tbody id="states-body">${rows.map(r => stateRow(r)).join('')}</tbody>
+  </table>`;
+}
+
+function stateRow(r) {
+  const canGoLive = !r.reviewedAt;
+  return `<tr id="state-row-${r.code}">
+    <td><code>${r.code}</code></td>
+    <td>${r.name}</td>
+    <td>${goLiveBadge(r.reviewedAt)}</td>
+    <td class="ts">${fmt(r.reviewedAt)}</td>
+    <td class="ts">${fmt(r.configUpdatedAt)}</td>
+    <td style="text-align:right">
+      ${canGoLive
+        ? `<button class="btn-primary btn-sm" onclick="setGoLive('${r.code}', true)">Set Go-Live</button>`
+        : `<button class="btn-danger btn-sm" onclick="setGoLive('${r.code}', false)">Revoke</button>`
+      }
+    </td>
+  </tr>`;
+}
+
+async function setGoLive(code, enable) {
+  const method = enable ? 'POST' : 'DELETE';
+  const res = await fetch(`/api/admin/states/${code}/go-live`, { method });
+  const data = await res.json();
+  if (!data.ok) { toast('Request failed', 'var(--red)'); return; }
+  toast(enable ? `${code} marked go-live` : `${code} go-live revoked`, enable ? 'var(--green)' : 'var(--yellow)');
+  loaded['states'] = false;
+  loadPage('states', true);
+}
+
+// ── Submissions ───────────────────────────────────────────────────────────────
+async function loadSubmissions() {
+  const data = await fetch('/api/admin/submissions').then(r => r.json());
+  const { rows, counts } = data;
+
+  // Count cards
+  const order = ['received','validating','package_ready','rejected'];
+  const map = Object.fromEntries(counts.map(c => [c.status, Number(c.n)]));
+  const colors = { received:'blue', validating:'yellow', package_ready:'green', rejected:'red' };
+  const labels = { received:'Received', validating:'Validating', package_ready:'Package Ready', rejected:'Rejected' };
+  document.getElementById('sub-counts').innerHTML = order.map(s =>
+    `<div class="card"><div class="card-label">${labels[s]}</div><div class="card-value ${colors[s]}">${map[s] || 0}</div></div>`
+  ).join('');
+
+  const wrap = document.getElementById('submissions-wrap');
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">No submissions yet.</div>'; return; }
+  wrap.innerHTML = `<table>
+    <thead><tr>
+      <th>Inspection ID</th><th>Company</th><th>State</th><th>Protocol</th><th>Status</th><th>Package</th><th>Received</th>
+    </tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td><code title="${r.inspectionId}">${trunc(r.inspectionId,20)}</code></td>
+      <td>${r.companyId}</td>
+      <td>${r.stateCode}</td>
+      <td><code>${r.protocolVersion}</code></td>
+      <td>${statusBadge(r.status)}</td>
+      <td>${r.packageRef
+        ? `<a href="/submissions/${r.id}/package" style="color:var(--accent);font-size:12px">Download</a>`
+        : '<span style="color:var(--muted)">—</span>'
+      }</td>
+      <td class="ts">${fmt(r.receivedAt)}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ── NOAA ──────────────────────────────────────────────────────────────────────
+async function loadNoaa() {
+  const data = await fetch('/api/admin/noaa').then(r => r.json());
+  const { coverage, runs, eventCount } = data;
+
+  document.getElementById('noaa-count').textContent = Number(eventCount).toLocaleString();
+  document.getElementById('noaa-counties').textContent = coverage.length;
+
+  // Coverage table
+  const covWrap = document.getElementById('noaa-coverage-wrap');
+  if (!coverage.length) {
+    covWrap.innerHTML = '<div class="empty">No counties tracked yet. Run <code>pnpm run noaa backfill STATE:County</code> to add one.</div>';
+  } else {
+    covWrap.innerHTML = `<table>
+      <thead><tr><th>State</th><th>County</th><th>Added</th><th>Last Backfilled</th><th>Latest File</th></tr></thead>
+      <tbody>${coverage.map(c => `<tr>
+        <td>${c.stateAbbr}</td>
+        <td>${c.countyName}</td>
+        <td class="ts">${fmt(c.addedAt)}</td>
+        <td class="ts">${fmt(c.lastBackfilledAt)}</td>
+        <td><code>${c.lastFileCreated || '—'}</code></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  // Ingest runs table
+  const runsWrap = document.getElementById('noaa-runs-wrap');
+  if (!runs.length) {
+    runsWrap.innerHTML = '<div class="empty">No ingest runs recorded yet.</div>';
+  } else {
+    runsWrap.innerHTML = `<table>
+      <thead><tr><th>Kind</th><th>Started</th><th>Finished</th><th>Upserted</th><th>Pruned</th><th>Note</th></tr></thead>
+      <tbody>${runs.map(r => `<tr>
+        <td><span class="badge ${r.kind === 'monthly' ? 'badge-blue' : 'badge-muted'}">${r.kind}</span></td>
+        <td class="ts">${fmt(r.startedAt)}</td>
+        <td class="ts">${fmt(r.finishedAt)}</td>
+        <td>${r.rowsUpserted ?? '—'}</td>
+        <td>${r.rowsPruned ?? '—'}</td>
+        <td style="color:var(--sub)">${r.note || '—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+loadPage('overview');
+</script>
+</body>
+</html>

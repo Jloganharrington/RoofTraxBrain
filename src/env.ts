@@ -35,14 +35,20 @@ export const env = {
   // production boot fails closed below if any is missing.
   BRAIN_API_TOKEN: optional('BRAIN_API_TOKEN'),
   ADMIN_USERNAME: optional('ADMIN_USERNAME'),
+  // Either a pre-computed argon2 hash (takes precedence) or a plaintext
+  // password that gets hashed once in memory at first login attempt.
   ADMIN_PASSWORD_HASH: optional('ADMIN_PASSWORD_HASH'),
+  ADMIN_PASSWORD: optional('ADMIN_PASSWORD'),
   SESSION_SECRET: optional('SESSION_SECRET'),
 };
 
 // Fail closed: a misconfigured production deploy must not start wide open.
 if (env.NODE_ENV === 'production') {
-  const missing = (['BRAIN_API_TOKEN', 'ADMIN_USERNAME', 'ADMIN_PASSWORD_HASH', 'SESSION_SECRET'] as const)
-    .filter((k) => !env[k]);
+  const missing = (['BRAIN_API_TOKEN', 'ADMIN_USERNAME', 'SESSION_SECRET'] as const)
+    .filter((k) => !env[k]) as string[];
+  if (!env.ADMIN_PASSWORD_HASH && !env.ADMIN_PASSWORD) {
+    missing.push('ADMIN_PASSWORD_HASH (or ADMIN_PASSWORD)');
+  }
   if (missing.length > 0) {
     throw new Error(`Refusing to start in production with missing auth secrets: ${missing.join(', ')}`);
   }

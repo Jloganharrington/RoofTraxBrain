@@ -19,11 +19,15 @@ export const sampleInspection: SubmittedInspection = {
   },
   storm: {
     confirmedDate: '2026-05-18',
+    datetimeLocal: '2026-05-18T19:12:00',
     primaryType: 'hail',
     hailSize: 1.75,
     windSpeed: 58,
     distance: 2.1,
-    description: 'Severe thunderstorm with 1.75" hail reported 2.1 mi from the property.',
+    latitude: 38.8462,
+    longitude: -77.3064,
+    station: 'LWX',
+    description: 'Quarter to half-dollar size hail reported with a severe thunderstorm. (LWX)',
     source: 'VisualCrossing',
   },
   inspector: {

@@ -45,12 +45,25 @@ export interface SubmittedInspection {
   };
   storm: {
     confirmedDate: string | null;
+    // Full local timestamp of the confirmed report ('YYYY-MM-DDTHH:mm:ss'), if the
+    // field app captured the event time (not just the day). Local to the property.
+    datetimeLocal?: string | null;
     primaryType: 'hail' | 'wind' | 'tornado' | null;
     hailSize: number | null;
     windSpeed: number | null;
     distance: number | null;
+    // Strike/report point of the confirmed event.
+    latitude?: number | null;
+    longitude?: number | null;
+    // NWS WFO code (e.g. 'LWX'); if absent, parsed from `description`.
+    station?: string | null;
     description: string | null;
     source: string;
+    // Set when the storm of record was upgraded to the authoritative NCEI Storm
+    // Events archive at package build (Phase-2): official Event ID + the episode
+    // synopsis. Absent for the Phase-1 (VisualCrossing) storm.
+    officialEventId?: string | null;
+    episodeNarrative?: string | null;
   } | null;
   inspector: {
     name: string;

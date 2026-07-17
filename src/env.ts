@@ -26,7 +26,7 @@ export const env = {
   // Optional at boot; the package route 503s if absent at call time.
   GEMINI_API_KEY: optional('AI_INTEGRATIONS_GEMINI_API_KEY') || optional('GEMINI_API_KEY'),
   GEMINI_BASE_URL: optional('AI_INTEGRATIONS_GEMINI_BASE_URL'),
-  GEMINI_MODEL: optional('GEMINI_MODEL', 'gemini-2.5-pro'),
+  GEMINI_MODEL: optional('GEMINI_MODEL', 'gemini-3.1-pro-preview'),
   GEMINI_TEMPERATURE: optional('GEMINI_TEMPERATURE', '0.2'),
   AI_MAX_RETRIES: Number(optional('AI_MAX_RETRIES', '2')),
 

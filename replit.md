@@ -60,7 +60,7 @@ pnpm run db:seed       # re-seed company/state config
 | `OBJECT_STORAGE_BASE_URL` | optional | Photo re-hash / chain of custody |
 | `AI_INTEGRATIONS_GEMINI_BASE_URL` / `_API_KEY` | for B6 | Auto-provisioned by Replit's managed Gemini integration (do not edit) |
 | `GEMINI_API_KEY` | fallback | Only if using a personal Google key instead of the managed integration |
-| `GEMINI_MODEL` | — | Default `gemini-2.5-pro` |
+| `GEMINI_MODEL` | — | Default `gemini-3.1-pro-preview` |
 | `GEMINI_TEMPERATURE` | — | Default `0.2` |
 | `AI_MAX_RETRIES` | — | Default `2` |
 | `BRAIN_API_TOKEN` | auth | Machine bearer token for app→Brain API (intake/status/build) |

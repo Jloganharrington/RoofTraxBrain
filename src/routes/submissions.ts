@@ -2,13 +2,16 @@ import { Router } from 'express';
 import { parseEnvelope } from '../submissions/validate.js';
 import { receiveSubmission, getSubmission } from '../submissions/store.js';
 import { getCompany, getStateConfig } from '../config/resolve.js';
+import { requireMachineToken } from '../auth/machine.js';
+import { requireAdminOrMachine } from '../auth/session.js';
 
 export const submissionsRouter: Router = Router();
 
 // Intake — the field app couriers a contract-v1 envelope here.
+// Machine realm only: the mobile api-server sends Authorization: Bearer $BRAIN_API_TOKEN.
 // (Byte-level photo re-hash against object storage is a hardening step wired in
 // B7; intake trusts the field app's server-verified hashes for B0–B5.)
-submissionsRouter.post('/submissions', async (req, res) => {
+submissionsRouter.post('/submissions', requireMachineToken, async (req, res) => {
   const parsed = parseEnvelope(req.body);
   if (!parsed.ok) {
     res.status(422).json({ error: 'invalid_envelope', detail: parsed.error });
@@ -42,8 +45,8 @@ submissionsRouter.post('/submissions', async (req, res) => {
 });
 
 // Status / receipt — the app polls this after submitting.
-submissionsRouter.get('/submissions/:id/status', async (req, res) => {
-  const sub = await getSubmission(req.params.id);
+submissionsRouter.get('/submissions/:id/status', requireAdminOrMachine, async (req, res) => {
+  const sub = await getSubmission(req.params.id as string);
   if (!sub) {
     res.status(404).json({ error: 'not_found' });
     return;

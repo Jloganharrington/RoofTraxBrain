@@ -1,0 +1,1 @@
+- [RoofTrax Brain conventions](rooftrax-brain-conventions.md) — pure PDF pipeline (inputs via opts), token-exact fail-closed AI guard, Replit-managed Gemini, two fail-closed auth realms.

@@ -26,4 +26,21 @@ export const env = {
   GEMINI_MODEL: optional('GEMINI_MODEL', 'gemini-2.5-pro'),
   GEMINI_TEMPERATURE: optional('GEMINI_TEMPERATURE', '0.2'),
   AI_MAX_RETRIES: Number(optional('AI_MAX_RETRIES', '2')),
+
+  // Auth — two realms: machine bearer token (app→Brain API) and single admin
+  // session (UI). Optional in development so offline scripts/tests still run;
+  // production boot fails closed below if any is missing.
+  BRAIN_API_TOKEN: optional('BRAIN_API_TOKEN'),
+  ADMIN_USERNAME: optional('ADMIN_USERNAME'),
+  ADMIN_PASSWORD_HASH: optional('ADMIN_PASSWORD_HASH'),
+  SESSION_SECRET: optional('SESSION_SECRET'),
 };
+
+// Fail closed: a misconfigured production deploy must not start wide open.
+if (env.NODE_ENV === 'production') {
+  const missing = (['BRAIN_API_TOKEN', 'ADMIN_USERNAME', 'ADMIN_PASSWORD_HASH', 'SESSION_SECRET'] as const)
+    .filter((k) => !env[k]);
+  if (missing.length > 0) {
+    throw new Error(`Refusing to start in production with missing auth secrets: ${missing.join(', ')}`);
+  }
+}

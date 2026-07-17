@@ -253,6 +253,10 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
       NOAA Weather
     </a>
+    <a onclick="logout()" style="margin-top:auto">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign out
+    </a>
   </nav>
 </aside>
 
@@ -318,6 +322,19 @@
 <div id="toast"></div>
 
 <script>
+// ── Auth ──────────────────────────────────────────────────────────────────────
+// Any 401 from the admin API means the session expired — go to login.
+const _fetch = window.fetch.bind(window);
+window.fetch = async (...args) => {
+  const res = await _fetch(...args);
+  if (res.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
+  return res;
+};
+async function logout() {
+  try { await _fetch('/admin/logout', { method: 'POST' }); } catch {}
+  location.href = '/login';
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentPage = 'overview';
 let loaded = {};
@@ -359,10 +376,12 @@ const trunc = (s, n=28) => s && s.length > n ? s.slice(0,n)+'…' : (s || '—')
 
 function statusBadge(s) {
   const map = {
-    received:      ['blue',   'Received'],
-    validating:    ['yellow', 'Validating'],
-    package_ready: ['green',  'Package Ready'],
-    rejected:      ['red',    'Rejected'],
+    received:          ['blue',   'Received'],
+    validating:        ['yellow', 'Validating'],
+    generating:        ['yellow', 'Generating'],
+    generation_failed: ['red',    'Generation Failed'],
+    package_ready:     ['green',  'Package Ready'],
+    rejected:          ['red',    'Rejected'],
   };
   const [cls, label] = map[s] || ['muted', s];
   return `<span class="badge badge-${cls}">${label}</span>`;

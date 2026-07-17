@@ -105,6 +105,20 @@ test('guard allows grounded numbers from scope and storm', () => {
   assert.equal(result.ok, true, `Unexpected violations: ${result.violations.join('; ')}`);
 });
 
+test('guard rejects substring-collision numbers (exact token match)', () => {
+  // "35" is a substring of the grounded "13500" but is NOT itself a fact token.
+  const bad: ForensicNarratives = {
+    ...baseNarratives,
+    conclusion: {
+      ...baseNarratives.conclusion,
+      statement: 'Approximately 35 shingles were displaced.',
+    },
+  };
+  const result = runGuard(bad, baseInput);
+  assert.equal(result.ok, false);
+  assert.ok(result.violations.some((v) => v.includes('"35"')), `violations: ${result.violations}`);
+});
+
 test('guard allows numbers from test square hit count', () => {
   const good: ForensicNarratives = {
     ...baseNarratives,

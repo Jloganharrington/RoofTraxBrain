@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RoofTrax Brain — Sign in</title>
+  <style>
+    :root { --bg:#0e1116; --panel:#161b23; --border:#242c38; --text:#e6ebf2; --muted:#8b98ab; --accent:#3b82f6; --danger:#ef4444; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font:14px/1.5 -apple-system,'Segoe UI',Roboto,sans-serif;
+           min-height:100vh; display:flex; align-items:center; justify-content:center; }
+    .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:36px; width:360px; }
+    h1 { font-size:18px; margin-bottom:4px; }
+    .sub { color:var(--muted); font-size:12.5px; margin-bottom:24px; }
+    label { display:block; font-size:12px; color:var(--muted); margin:14px 0 5px; }
+    input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px;
+            padding:10px 12px; color:var(--text); font-size:14px; }
+    input:focus { outline:none; border-color:var(--accent); }
+    button { width:100%; margin-top:22px; background:var(--accent); border:none; border-radius:8px;
+             padding:11px; color:#fff; font-size:14px; font-weight:600; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:default; }
+    .err { color:var(--danger); font-size:12.5px; margin-top:12px; min-height:18px; }
+  </style>
+</head>
+<body>
+  <form class="card" id="f">
+    <h1>RoofTrax Brain</h1>
+    <div class="sub">Operator sign-in</div>
+    <label for="u">Username</label>
+    <input id="u" autocomplete="username" required />
+    <label for="p">Password</label>
+    <input id="p" type="password" autocomplete="current-password" required />
+    <button id="b" type="submit">Sign in</button>
+    <div class="err" id="e"></div>
+  </form>
+  <script>
+    const f = document.getElementById('f'), e = document.getElementById('e'), b = document.getElementById('b');
+    f.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      e.textContent = ''; b.disabled = true;
+      try {
+        const res = await fetch('/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: document.getElementById('u').value, password: document.getElementById('p').value }),
+        });
+        if (res.ok) { location.href = '/'; return; }
+        e.textContent = res.status === 429 ? 'Too many attempts — wait a minute.' : 'Invalid username or password.';
+      } catch { e.textContent = 'Network error — try again.'; }
+      b.disabled = false;
+    });
+  </script>
+</body>
+</html>

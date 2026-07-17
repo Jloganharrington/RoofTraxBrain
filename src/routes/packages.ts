@@ -8,6 +8,7 @@ import { deliverReportToCrm, pendingCrmConfig } from '../crm/ingest.js';
 import { resolveStormOfRecord, toStormBlock } from '../weather/noaa/query.js';
 import { generateNarratives } from '../ai/generate.js';
 import { GeminiGenerationError } from '../ai/gemini.js';
+import { requireAdminOrMachine } from '../auth/session.js';
 import type { SubmittedInspection } from '../submissions/types.js';
 import { env } from '../env.js';
 
@@ -59,8 +60,8 @@ const store = new LocalPackageStore();
 // store the PDF, flip to package_ready.
 // (Runs inline and awaits; a production deploy can wrap this in a job queue —
 // the app already polls GET /status, so no client change is needed then.)
-packagesRouter.post('/submissions/:id/package', async (req, res) => {
-  const sub = await getSubmission(req.params.id);
+packagesRouter.post('/submissions/:id/package', requireAdminOrMachine, async (req, res) => {
+  const sub = await getSubmission(req.params.id as string);
   if (!sub) {
     res.status(404).json({ error: 'not_found' });
     return;
@@ -154,8 +155,8 @@ packagesRouter.post('/submissions/:id/package', async (req, res) => {
 });
 
 // Download the rendered package PDF.
-packagesRouter.get('/submissions/:id/package', async (req, res) => {
-  const sub = await getSubmission(req.params.id);
+packagesRouter.get('/submissions/:id/package', requireAdminOrMachine, async (req, res) => {
+  const sub = await getSubmission(req.params.id as string);
   if (!sub) {
     res.status(404).json({ error: 'not_found' });
     return;

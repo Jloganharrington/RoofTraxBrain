@@ -71,11 +71,23 @@ function extractNumbers(text: string): string[] {
   return [...new Set(tokens.filter((t) => t.length >= 2 || t.includes('.')))];
 }
 
+// Build the set of exact numeric tokens present in the input facts. Exact
+// token matching (not substring search) — otherwise "35" would be accepted
+// merely because "13500" appears somewhere in the serialized facts.
+function factNumberSet(input: GenerationInput): Set<string> {
+  const tokens = JSON.stringify(input).match(/\d+(?:\.\d+)?/g) ?? [];
+  return new Set(tokens);
+}
+
 function checkGrounding(text: string, input: GenerationInput): string[] {
-  const factsJson = JSON.stringify(input);
-  const numbers = extractNumbers(text);
-  return numbers
-    .filter((n) => !factsJson.includes(n))
+  const facts = factNumberSet(input);
+  return extractNumbers(text)
+    .filter((tok) => {
+      // Normalize: strip trailing %, split fractions ("6/12" → "6","12").
+      // Every component must be an exact fact token.
+      const parts = tok.replace(/%$/, '').split('/');
+      return !parts.every((p) => facts.has(p));
+    })
     .map((n) => `ungrounded number: "${n}" not found in input facts`);
 }
 

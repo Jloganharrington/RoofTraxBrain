@@ -4,6 +4,7 @@ import { verifyPhotoIntegrity, type IntegrityResult } from '../integrity/verify.
 import type { PhotoFetcher } from '../integrity/photoFetcher.js';
 import type { SubmittedInspection, SubmissionManifestV1 } from '../submissions/types.js';
 import type { ResolvedConfig } from '../tenancy/types.js';
+import type { ForensicNarratives } from '../ai/types.js';
 
 export type AssembleResult =
   | {
@@ -20,19 +21,30 @@ export type AssembleResult =
 // against the manifest (chain of custody), then render the exhibits. Integrity
 // failure blocks rendering. Pure — no DB/HTTP beyond the injected fetcher — so
 // it is fully verifiable with a fixture + mock fetcher.
+//
+// B6: opts.narratives and opts.signatureImageBytes are forwarded to buildPackage
+// so exhibits F/G/M render when narratives are present.
 export async function assemblePackage(
   inspection: SubmittedInspection,
   config: ResolvedConfig,
   manifest: SubmissionManifestV1,
   fetcher: PhotoFetcher,
-  opts?: { generatedAt?: Date },
+  opts?: {
+    generatedAt?: Date;
+    narratives?: ForensicNarratives | null;
+    signatureImageBytes?: Uint8Array | null;
+  },
 ): Promise<AssembleResult> {
   const integrity = await verifyPhotoIntegrity(inspection.photos, manifest.photoHashes, fetcher);
   if (!integrity.ok) {
     return { ok: false, reason: 'integrity_failed', integrity };
   }
 
-  const built = await buildPackage(inspection, config, { generatedAt: opts?.generatedAt });
+  const built = await buildPackage(inspection, config, {
+    generatedAt: opts?.generatedAt,
+    narratives: opts?.narratives,
+    signatureImageBytes: opts?.signatureImageBytes,
+  });
   const sha256 = createHash('sha256').update(built.bytes).digest('hex');
   return {
     ok: true,

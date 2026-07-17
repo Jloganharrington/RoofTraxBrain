@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { submissionsTable } from '../db/schema.js';
 import type { SubmissionEnvelopeV1, SubmissionStatus } from './types.js';
+import type { ForensicNarratives } from '../ai/types.js';
 
 // Persist a received submission. Idempotent by inspectionId: a re-submit of the
 // same inspection replaces the stored envelope (the field app locks the record
@@ -72,5 +73,17 @@ export async function setPackage(
   await db
     .update(submissionsTable)
     .set({ status: 'package_ready', packageRef, packageSha256, packagedAt: new Date() })
+    .where(eq(submissionsTable.id, id));
+}
+
+// B6 — store the generated narratives so rebuilds are deterministic.
+export async function setAiNarratives(
+  id: string,
+  narratives: ForensicNarratives,
+  model: string,
+): Promise<void> {
+  await db
+    .update(submissionsTable)
+    .set({ aiNarratives: narratives, aiModel: model, aiGeneratedAt: new Date() })
     .where(eq(submissionsTable.id, id));
 }

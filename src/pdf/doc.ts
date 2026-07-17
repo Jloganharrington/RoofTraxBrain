@@ -372,6 +372,37 @@ export class PdfDoc {
     this.newPage();
   }
 
+  // Render a pre-embedded signature image + inspector attribution line.
+  // Called synchronously from exhibit M (image is embedded in buildPackage before rendering).
+  signatureBlock(
+    image: import('pdf-lib').PDFImage,
+    opts: { name: string; license: string | null; signedAt: string | null },
+  ): void {
+    const maxW = 180;
+    const maxH = 56;
+    const ratio = Math.min(maxW / image.width, maxH / image.height, 1);
+    const w = image.width * ratio;
+    const h = image.height * ratio;
+    this.ensure(h + 28);
+    this.page.drawImage(image, { x: MARGIN_X, y: this.y - h, width: w, height: h });
+    this.y -= h + 6;
+    const line = [
+      opts.name,
+      opts.license ? `License ${opts.license}` : null,
+      opts.signedAt ? `Signed ${opts.signedAt}` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    this.page.drawText(sanitize(line), {
+      x: MARGIN_X,
+      y: this.y,
+      size: MIN_FONT,
+      font: this.reg,
+      color: MUTED,
+    });
+    this.y -= MIN_FONT + 6;
+  }
+
   async bytes(): Promise<Uint8Array> {
     return this.pdf.save();
   }

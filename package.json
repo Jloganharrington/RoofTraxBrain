@@ -16,9 +16,11 @@
     "sample": "tsx scripts/build-sample.ts",
     "verify:noaa": "tsx scripts/verify-noaa.ts",
     "noaa": "tsx scripts/noaa-ingest.ts",
-    "test": "tsx --test src/**/*.test.ts"
+    "test": "tsx --test src/**/*.test.ts",
+    "verify:b6": "tsx scripts/verify-b6.ts"
   },
   "dependencies": {
+    "@google/genai": "^2.12.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.38.3",
@@ -29,7 +31,11 @@
     "zod": "^3.24.1"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@google/genai",
+      "protobufjs"
+    ]
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

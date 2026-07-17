@@ -68,6 +68,10 @@ export const submissionsTable = pgTable('submissions', {
   packageSha256: text('package_sha256'),
   receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
   packagedAt: timestamp('packaged_at', { withTimezone: true }),
+  // B6 — stored AI narratives (determinism: generate once, reuse on rebuild)
+  aiNarratives: jsonb('ai_narratives'),
+  aiModel: text('ai_model'),
+  aiGeneratedAt: timestamp('ai_generated_at', { withTimezone: true }),
 });
 
 // ---- NOAA Storm Events: rolling 24-month severe-weather corpus ----

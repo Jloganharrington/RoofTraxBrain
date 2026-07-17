@@ -1,0 +1,63 @@
+Auth Build-out — machine token (API) + single admin login (UI)
+Repo: RoofTraxBrain. Who builds this: Replit, alongside the B6/UI work. Why now: the Brain has no auth today (only helmet() + open cors()), and it's about to become a public Replit deployment with a UI. Every route is currently open — including package build (paid Gemini calls) and package download (claim PII). This closes that before it ships.
+
+The model — two separate doors
+The Brain is non-customer-facing, but "internal" ≠ "open." It needs two independent auth realms, because two different callers hit it:
+
+Realm	Who	Protects
+Machine token (bearer)	the mobile app / api-server, programmatically	the app→Brain API (submission intake, build, status)
+Admin session (single login)	one NuHome operator, in a browser	the UI pages + all settings/ops actions
+A human login on the UI does not protect the API — the app calls endpoints directly, so those need their own token. Some endpoints accept either (an admin in the UI and the app can both trigger a build).
+
+1. Secrets (Replit Secrets — never commit; repo is public)
+BRAIN_API_TOKEN — long random string the app sends as Authorization: Bearer ….
+ADMIN_USERNAME — the single admin user.
+ADMIN_PASSWORD_HASH — argon2 or bcrypt hash of the admin password. Never store the plaintext. Ship a tiny scripts/hash-password.ts that prints a hash so the password never touches the repo or a commit.
+SESSION_SECRET — HS256 signing key for the session cookie/JWT.
+Extend src/env.ts to read these. Boot-time validation (fail closed): when NODE_ENV === 'production', refuse to start if any auth secret is missing — so a misconfig can't silently deploy the Brain wide open. (This mirrors the CRM's A9 boot validation.)
+
+2. Middleware (src/auth/)
+Three guards:
+
+requireMachineToken(req,res,next) — read Authorization: Bearer <t>; compare to BRAIN_API_TOKEN with crypto.timingSafeEqual (constant-time). Missing/wrong → 401. Never fall through to open.
+requireAdmin(req,res,next) — verify the signed session cookie (JWT HS256 with SESSION_SECRET, or express-session with a signed store). Invalid/absent → 401 (API) / redirect to login (UI page).
+requireAdminOrMachine(req,res,next) — pass if either a valid admin session or a valid machine token is present; else 401.
+3. Admin login flow
+POST /admin/login — { username, password } → verify username == ADMIN_USERNAME and argon2.verify(ADMIN_PASSWORD_HASH, password) → on success set an httpOnly, Secure, SameSite=Strict cookie holding a short-lived signed session (e.g. 8–12h). On failure, generic 401 (don't reveal which field was wrong).
+POST /admin/logout — clear the cookie.
+Rate-limit /admin/login (e.g. express-rate-limit, ~5/min/IP) to blunt brute force.
+Stateless JWT-in-cookie is fine for a single admin — no session store needed.
+4. Route protection map (apply to the existing routes)
+Method + path	Guard
+GET /healthz	open (Replit uptime checks)
+POST /admin/login	open (rate-limited)
+POST /admin/logout	requireAdmin
+POST /submissions (intake)	requireMachineToken
+GET /submissions/:id/status	requireAdminOrMachine
+POST /submissions/:id/package (build — paid Gemini)	requireAdminOrMachine
+GET /submissions/:id/package (download — PII)	requireAdminOrMachine
+all new UI pages + settings/ops (submission list, NOAA county-coverage CRUD + manual backfill trigger, AI narrative view/regenerate, config edits, Virginia go-live view)	requireAdmin
+Wire the guards at the router or per-route level in src/app.ts / the routers. Keep the /healthz route mounted before any global guard.
+
+5. Hardening checklist
+Fail closed everywhere — no path falls through to unauthenticated access.
+No dev auth bypass. (The CRM shipped one in dev and it had to be ripped out in A1 — don't repeat it.) Require the secrets in dev too; supply them via local .env.
+Constant-time token compare (timingSafeEqual); never === on the raw token.
+Password hashing argon2/bcrypt; only the hash in env; plaintext never committed.
+Cookies: httpOnly + Secure + SameSite=Strict; short TTL.
+Tighten CORS. Replace the open cors() with an allowlist (the UI origin; the app→Brain calls are server-to-server and don't need CORS). Don't reflect arbitrary origins.
+Don't log secrets — no tokens, cookies, or Authorization headers in logs.
+Rate-limit the login route.
+Network posture (preferred): if the platform allows, keep the Brain reachable only from the app + ops (private networking / IP allowlist) so the token is a second layer, not the only one. If it must be public, the token is mandatory.
+6. Don't break these
+npm run sample, npm run verify:noaa, npm test, npm run verify-b6 are offline and don't hit the server — they must keep running with no auth secrets set (guards live in the HTTP layer only).
+/healthz stays open so deploy health checks pass.
+The app→Brain contract only adds a header — coordinate the shared BRAIN_API_TOKEN into the mobile api-server's outbound call to the Brain (that's a RoofTraxMobile-side change: send Authorization: Bearer $BRAIN_API_TOKEN).
+7. Verification (state in the completion report)
+No token → POST /submissions returns 401. With the right token → works.
+No session → a UI/settings route returns 401/redirect. After POST /admin/login → works; after logout → 401 again.
+POST /submissions/:id/package works with either a valid admin session or a valid machine token; with neither → 401.
+/healthz is reachable with no auth.
+Wrong password → generic 401; repeated attempts get rate-limited.
+In NODE_ENV=production, boot fails if an auth secret is missing.
+npm run sample + npm test still pass with no auth secrets set.

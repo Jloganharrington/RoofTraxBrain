@@ -146,4 +146,10 @@ export interface SubmissionEnvelopeV1 {
   inspection: SubmittedInspection;
 }
 
-export type SubmissionStatus = 'received' | 'validating' | 'package_ready' | 'rejected';
+export type SubmissionStatus =
+  | 'received'
+  | 'validating'
+  | 'generating'        // B6: AI narrative generation in progress
+  | 'package_ready'
+  | 'rejected'
+  | 'generation_failed'; // B6: AI guard/model failure (fail-closed)

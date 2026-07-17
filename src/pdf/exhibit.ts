@@ -1,13 +1,19 @@
+import type { PDFImage } from 'pdf-lib';
 import type { PdfDoc } from './doc.js';
 import type { SubmittedInspection } from '../submissions/types.js';
 import type { ResolvedConfig } from '../tenancy/types.js';
 import type { ScopeResult } from '../scope/types.js';
+import type { ForensicNarratives } from '../ai/types.js';
 
 export interface ExhibitContext {
   doc: PdfDoc;
   inspection: SubmittedInspection;
   config: ResolvedConfig;
   scope: ScopeResult;
+  // B6 — AI narratives (null when GEMINI_API_KEY not configured or not yet generated)
+  ai: ForensicNarratives | null;
+  // B6 — pre-embedded signature image (null when absent or failed to embed)
+  signatureImage: PDFImage | null;
 }
 
 export interface ExhibitGenerator {

@@ -6,6 +6,8 @@ import { LocalPackageStore } from '../packages/store.js';
 import { HttpPhotoFetcher } from '../integrity/photoFetcher.js';
 import { deliverReportToCrm, pendingCrmConfig } from '../crm/ingest.js';
 import { resolveStormOfRecord, toStormBlock } from '../weather/noaa/query.js';
+import { generateNarratives } from '../ai/generate.js';
+import { GeminiGenerationError } from '../ai/gemini.js';
 import type { SubmittedInspection } from '../submissions/types.js';
 import { env } from '../env.js';
 
@@ -35,12 +37,26 @@ async function withAuthoritativeStorm(
   }
 }
 
+// Fetch signature image bytes — best-effort; failure → exhibit M renders text fallback.
+async function fetchSignatureBytes(
+  fetcher: HttpPhotoFetcher,
+  signatureUrl: string | null,
+): Promise<Uint8Array | null> {
+  if (!signatureUrl) return null;
+  try {
+    return await fetcher.fetch(signatureUrl);
+  } catch {
+    return null;
+  }
+}
+
 export const packagesRouter: Router = Router();
 
 const store = new LocalPackageStore();
 
-// Build the proof package for a submitted inspection: re-hash photo bytes for
-// chain of custody, render the exhibits, store the PDF, flip to package_ready.
+// Build the proof package for a submitted inspection: generate AI narratives
+// (B6), re-hash photo bytes for chain of custody, render all exhibits A–M,
+// store the PDF, flip to package_ready.
 // (Runs inline and awaits; a production deploy can wrap this in a job queue —
 // the app already polls GET /status, so no client change is needed then.)
 packagesRouter.post('/submissions/:id/package', async (req, res) => {
@@ -51,6 +67,10 @@ packagesRouter.post('/submissions/:id/package', async (req, res) => {
   }
   if (!env.OBJECT_STORAGE_BASE_URL) {
     res.status(503).json({ error: 'object_storage_not_configured' });
+    return;
+  }
+  if (!env.GEMINI_API_KEY) {
+    res.status(503).json({ error: 'gemini_not_configured', detail: 'Set GEMINI_API_KEY to enable AI exhibit generation.' });
     return;
   }
 
@@ -67,10 +87,41 @@ packagesRouter.post('/submissions/:id/package', async (req, res) => {
     return;
   }
 
+  // B6 — generate AI narratives before assembly (load-or-generate + guard + store)
+  const regenerate = req.query['regenerate'] === 'true';
+  await setStatus(sub.id, 'generating');
+
+  let narratives;
+  try {
+    const result = await generateNarratives(sub.id, config, { regenerate });
+    narratives = result.narratives;
+    console.log(
+      `[ai] narratives ${result.fromCache ? 'loaded from cache' : 'generated'} via ${result.model}`,
+    );
+  } catch (err) {
+    await setStatus(sub.id, 'generation_failed');
+    const violations = err instanceof GeminiGenerationError ? err.violations : [];
+    res.status(422).json({
+      error: 'generation_failed',
+      detail: (err as Error).message,
+      violations,
+    });
+    return;
+  }
+
   await setStatus(sub.id, 'validating');
   const fetcher = new HttpPhotoFetcher(env.OBJECT_STORAGE_BASE_URL);
   const inspection = await withAuthoritativeStorm(sub.inspection, sub.stateCode);
-  const result = await assemblePackage(inspection, config, sub.manifest, fetcher);
+
+  // Fetch inspector signature image bytes (best-effort for Exhibit M)
+  const signatureUrl =
+    sub.manifest.signatureOnFile?.url ?? inspection.inspector.signatureUrl ?? null;
+  const signatureImageBytes = await fetchSignatureBytes(fetcher, signatureUrl);
+
+  const result = await assemblePackage(inspection, config, sub.manifest, fetcher, {
+    narratives,
+    signatureImageBytes,
+  });
 
   if (!result.ok) {
     await setStatus(sub.id, 'rejected');

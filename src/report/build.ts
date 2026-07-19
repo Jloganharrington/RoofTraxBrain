@@ -348,6 +348,19 @@ const DETERMINATION_PROSE: Record<string, string> = {
   not_repairable: 'Not repairable in place — full replacement required.',
 };
 
+// Storm type is a lowercase enum on the wire; the template prints it verbatim,
+// so present it here rather than shipping "hail" into a carrier-facing document.
+const STORM_TYPE_LABEL: Record<string, string> = {
+  hail: 'Hail',
+  wind: 'Wind',
+  tornado: 'Tornado',
+};
+
+function formatStormType(t: string | null): string | null {
+  if (!t) return null;
+  return STORM_TYPE_LABEL[t] ?? t;
+}
+
 function formatHail(inches: number | null): string | null {
   return inches == null ? null : `${inches} in`;
 }
@@ -575,7 +588,7 @@ export function buildReportData(
     weatherEvidence: storm
       ? {
           stormDate: storm.confirmedDate,
-          stormType: storm.primaryType,
+          stormType: formatStormType(storm.primaryType),
           windGust: formatWind(storm.windSpeed),
           hailSize: formatHail(storm.hailSize),
           stormSource: storm.source,

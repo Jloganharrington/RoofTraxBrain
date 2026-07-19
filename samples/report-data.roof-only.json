@@ -146,7 +146,7 @@
   ],
   "weatherEvidence": {
     "stormDate": "2026-05-18",
-    "stormType": "hail",
+    "stormType": "Hail",
     "windGust": "58 mph",
     "hailSize": "1.75 in",
     "stormSource": "VisualCrossing",

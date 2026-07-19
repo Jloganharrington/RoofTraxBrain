@@ -280,10 +280,12 @@ describe('HTML template contract', () => {
     }
   });
 
-  test('weather magnitudes are pre-formatted with units', () => {
+  test('weather values are presentation-ready — the template prints them verbatim', () => {
     const r = build(inspection());
     assert.equal(r.weatherEvidence?.hailSize, '1.75 in');
     assert.equal(r.weatherEvidence?.windGust, '58 mph');
+    // Raw enum would put lowercase "hail" in a carrier-facing document.
+    assert.equal(r.weatherEvidence?.stormType, 'Hail');
   });
 
   test('determination renders as prose, not the raw enum', () => {

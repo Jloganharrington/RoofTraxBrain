@@ -113,7 +113,7 @@ packagesRouter.post('/submissions/:id/package', requireAdminOrMachine, async (re
   }
 
   await setStatus(sub.id, 'validating');
-  const fetcher = new HttpPhotoFetcher(env.OBJECT_STORAGE_BASE_URL);
+  const fetcher = new HttpPhotoFetcher(env.OBJECT_STORAGE_BASE_URL, env.BRAIN_API_TOKEN);
   const inspection = await withAuthoritativeStorm(sub.inspection, sub.stateCode);
 
   // Fetch inspector signature image bytes (best-effort for Exhibit M)

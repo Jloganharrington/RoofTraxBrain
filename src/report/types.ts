@@ -28,6 +28,12 @@ export interface ReportPhoto {
   label: string;
   desc: string;
   captureContext: CaptureContext | null;
+  // Embeddable image source (a `data:` URI). Null in the pure buildReportData
+  // output; populated by the HTML assembler after fetching the bytes through
+  // the app proxy. The template renders an <img> when present, a placeholder
+  // when null — which is why the pdf-lib packages showed no photos: nothing
+  // ever supplied a source.
+  src?: string | null;
 }
 
 export interface ScopeItem {

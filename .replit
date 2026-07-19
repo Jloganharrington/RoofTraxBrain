@@ -9,6 +9,7 @@ channel = "stable-25_05"
 
 [userenv.shared]
 PORT = "5000"
+OBJECT_STORAGE_BASE_URL = "https://ec3fa3a3-9a22-4aed-865b-5e1939fc311a-00-270orm15xhwel.spock.replit.dev/api/internal"
 
 [userenv.development]
 NODE_ENV = "development"

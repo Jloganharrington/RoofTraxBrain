@@ -204,3 +204,79 @@ export type NoaaIngestRunRow = typeof noaaIngestRunsTable.$inferSelect;
 export type CompanyConfigRow = typeof companyConfigTable.$inferSelect;
 export type StateConfigRow = typeof stateConfigTable.$inferSelect;
 export type SubmissionRow = typeof submissionsTable.$inferSelect;
+
+// ---- Company self-service configuration (set up via the Site's wizards) ----
+
+// Versioned, effective-dated price books. NEVER edited in place: the whole
+// defensibility argument is that pricing was published BEFORE the loss, so a
+// package must be able to cite the version in force on its date of loss.
+// Editing a row retroactively would invalidate that claim for every package
+// already issued.
+export const companyPriceBooksTable = pgTable(
+  'company_price_books',
+  {
+    id: text('id').primaryKey().default(sql`gen_random_uuid()`),
+    companyId: text('company_id')
+      .notNull()
+      .references(() => companiesTable.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull(),
+    // Date (not timestamp): resolution is by date of loss.
+    effectiveFrom: text('effective_from').notNull(), // YYYY-MM-DD
+    pricePerSquare: doublePrecision('price_per_square'),
+    currency: text('currency').notNull().default('USD'),
+    basisStatement: text('basis_statement'),
+    // Keyed by StatePack.adderRules[].key — enumerated from the company's
+    // configured service states, never free-text.
+    adderRates: jsonb('adder_rates').$type<Record<string, number>>().notNull().default({}),
+    // Labor build-up inputs feeding the §14 Pricing Support exhibit.
+    laborBuildUp: jsonb('labor_build_up').$type<Record<string, number>>(),
+    publishedAt: timestamp('published_at', { withTimezone: true }).notNull().defaultNow(),
+    publishedBy: text('published_by'), // audit: who published this version
+  },
+  (t) => ({
+    byCompany: index('price_books_company_idx').on(t.companyId, t.effectiveFrom),
+    uniqVersion: uniqueIndex('price_books_version_uniq').on(t.companyId, t.version),
+  }),
+);
+
+// Service areas drive THREE things: which state pack resolves for a claim,
+// which adder keys the price book must rate, and which counties the NOAA storm
+// corpus ingests. Adding a county should trigger the 24-month backfill.
+export const companyServiceAreasTable = pgTable(
+  'company_service_areas',
+  {
+    id: text('id').primaryKey().default(sql`gen_random_uuid()`),
+    companyId: text('company_id')
+      .notNull()
+      .references(() => companiesTable.id, { onDelete: 'cascade' }),
+    stateCode: text('state_code').notNull(),
+    countyName: text('county_name').notNull(),
+    stateFips: text('state_fips'),
+    addedAt: timestamp('added_at', { withTimezone: true }).notNull().defaultNow(),
+    addedBy: text('added_by'),
+    // Set once the NOAA 24-month backfill for this county has completed.
+    stormBackfillAt: timestamp('storm_backfill_at', { withTimezone: true }),
+  },
+  (t) => ({
+    byCompany: index('service_areas_company_idx').on(t.companyId),
+    uniqArea: uniqueIndex('service_areas_uniq').on(t.companyId, t.stateCode, t.countyName),
+  }),
+);
+
+// Append-only audit of company configuration changes. This is financial and
+// legal configuration; "who changed the roof rate and when" will be asked.
+export const companyConfigAuditTable = pgTable(
+  'company_config_audit',
+  {
+    id: text('id').primaryKey().default(sql`gen_random_uuid()`),
+    companyId: text('company_id')
+      .notNull()
+      .references(() => companiesTable.id, { onDelete: 'cascade' }),
+    area: text('area').notNull(), // price_book | service_areas | company_pack
+    action: text('action').notNull(), // published | added | removed | updated
+    actor: text('actor'),
+    detail: jsonb('detail').$type<Record<string, unknown>>(),
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({ byCompany: index('config_audit_company_idx').on(t.companyId, t.at) }),
+);

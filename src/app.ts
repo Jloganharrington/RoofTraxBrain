@@ -8,6 +8,7 @@ import { healthRouter } from './routes/health.js';
 import { submissionsRouter } from './routes/submissions.js';
 import { packagesRouter } from './routes/packages.js';
 import { adminRouter } from './routes/admin.js';
+import { configRouter } from './routes/config.js';
 import { authRouter } from './auth/login.js';
 import { requireAdmin } from './auth/session.js';
 
@@ -61,6 +62,9 @@ export function createApp(): Express {
   // API realms are guarded per-route inside these routers.
   app.use(submissionsRouter);
   app.use(packagesRouter);
+  // Company self-service config (Site onboarding + wizards). Gates internally
+  // with requireAdminOrMachine, like the submission/package routers above.
+  app.use(configRouter);
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'not_found' });

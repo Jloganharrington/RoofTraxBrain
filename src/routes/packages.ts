@@ -9,7 +9,7 @@ import { resolveStormOfRecord, toStormBlock } from '../weather/noaa/query.js';
 import { generateNarratives } from '../ai/generate.js';
 import { GeminiGenerationError } from '../ai/gemini.js';
 import { requireAdminOrMachine } from '../auth/session.js';
-import { buildReportData } from '../report/build.js';
+import { buildReportData, prepareInspection } from '../report/build.js';
 import type { SubmittedInspection } from '../submissions/types.js';
 import type { ForensicNarratives } from '../ai/types.js';
 import { env } from '../env.js';
@@ -126,7 +126,11 @@ packagesRouter.post('/submissions/:id/package', requireAdminOrMachine, async (re
 
   await setStatus(sub.id, 'validating');
   const fetcher = new HttpPhotoFetcher(env.OBJECT_STORAGE_BASE_URL, env.BRAIN_API_TOKEN);
-  const inspection = await withAuthoritativeStorm(sub.inspection, sub.stateCode);
+  // Reconcile the app's wire shape to the contract BEFORE the legacy pdf-lib
+  // exhibits read it — same normalise+adapt the report-data path uses. Without
+  // this the A–M exhibits crash on fields the app never sends.
+  const { inspection: preparedInspection } = prepareInspection(sub.inspection);
+  const inspection = await withAuthoritativeStorm(preparedInspection, sub.stateCode);
 
   // Fetch inspector signature image bytes (best-effort for Exhibit M)
   const signatureUrl =

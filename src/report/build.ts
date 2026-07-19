@@ -613,6 +613,24 @@ function buildMethodology(
 // Main entry point
 // ---------------------------------------------------------------------------
 
+// Normalise wire shape (absent arrays) then adapt field names, and report both.
+// Shared so the pdf-lib package renderer applies the SAME reconciliation the
+// report-data path does — otherwise the legacy A–M exhibits read the raw
+// payload and crash on fields the app never sends (e.g. observedIndicators).
+export function prepareInspection(raw: SubmittedInspection): {
+  inspection: SubmittedInspection;
+  absent: string[];
+  unmapped: string[];
+} {
+  const { inspection: normalised, absent } = normaliseInspection(raw);
+  const adapted = adaptSubmittedInspection(normalised as never);
+  return {
+    inspection: adapted.inspection as unknown as SubmittedInspection,
+    absent,
+    unmapped: adapted.unmapped,
+  };
+}
+
 export function buildReportData(
   rawInspection: SubmittedInspection,
   config: ResolvedConfig,
@@ -628,15 +646,14 @@ export function buildReportData(
   // collection is still reported, then adapt FIELD NAMES on arrays that are now
   // guaranteed to exist. Adapting first would coerce everything to [] and
   // silently swallow the very gaps we want surfaced.
-  const { inspection: normalised, absent } = normaliseInspection(rawInspection);
-  for (const key of absent) {
+  const prepared = prepareInspection(rawInspection);
+  const inspection = prepared.inspection;
+  for (const key of prepared.absent) {
     note(`payload.${key}: absent from the submission — treated as empty`);
   }
-  const adapted = adaptSubmittedInspection(normalised as never);
-  for (const field of adapted.unmapped) {
+  for (const field of prepared.unmapped) {
     note(`contract.${field}: no source field in the app payload`);
   }
-  const inspection = adapted.inspection as unknown as SubmittedInspection;
 
   if (!inspection.inspector) {
     note('payload.inspector: absent from the submission — the report cannot name who inspected');

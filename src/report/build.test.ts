@@ -374,3 +374,119 @@ describe('field-test findings prose', () => {
     assert.ok(prose.endsWith('Sealant strip failed to release.'));
   });
 });
+
+// ---------------------------------------------------------------------------
+// Inspection Methodology & Protocol — the section that turns "we looked at the
+// roof" into a documented, enforced, repeatable method.
+// ---------------------------------------------------------------------------
+
+describe('methodology & protocol', () => {
+  const manifest = {
+    protocolVersion: '2.1',
+    generatedAtUtc: '2026-07-18T15:00:00Z',
+    records: {},
+    photoHashes: [{ photoId: 'p1', sha256: 'a' }, { photoId: 'p2', sha256: 'b' }],
+    gateResults: { deficiencies: [], softFlags: [{ x: 1 }] },
+    signatureOnFile: null,
+  };
+
+  test('lists all 16 protocol steps in order', () => {
+    const m = build(inspection()).methodology;
+    assert.equal(m.steps.length, 16);
+    assert.deepEqual(m.steps.map((s) => s.order), Array.from({ length: 16 }, (_, i) => i + 1));
+    assert.equal(m.steps[0]?.name, 'Arrival Log');
+    assert.equal(m.steps[15]?.name, 'Readiness & Submit');
+  });
+
+  test('a step that did not apply says WHY — never a silent omission', () => {
+    const i = inspection({
+      damageFlags: { roofDamageFound: true, sidingDamageFound: false,
+        collateralDamageFound: false, interiorDamageFound: false },
+    });
+    const m = build(i).methodology;
+    const siding = m.steps.find((s) => s.name === 'Siding Inspection')!;
+    assert.equal(siding.applied, false);
+    assert.match(siding.notApplicableReason ?? '', /no siding damage was identified/);
+    // Always-on steps stay applied.
+    assert.equal(m.steps.find((s) => s.name === 'Arrival Log')?.applied, true);
+    assert.equal(m.steps.find((s) => s.name === 'Arrival Log')?.notApplicableReason, null);
+  });
+
+  test('repairability applies on roof OR siding', () => {
+    const only = (over: Record<string, boolean>) => build(inspection({
+      damageFlags: { roofDamageFound: false, sidingDamageFound: false,
+        collateralDamageFound: false, interiorDamageFound: false, ...over },
+    })).methodology.steps.find((s) => s.name === 'Repairability Assessment')!.applied;
+    assert.equal(only({ roofDamageFound: true }), true);
+    assert.equal(only({ sidingDamageFound: true }), true);
+    assert.equal(only({ collateralDamageFound: true }), false);
+  });
+
+  test('enforcement evidence is grounded in the manifest, not asserted', () => {
+    const withM = build(inspection(), { manifest });
+    assert.deepEqual(withM.methodology.enforcementEvidence, {
+      hardDeficienciesAtSubmission: 0,
+      advisoryFlagsAtSubmission: 1,
+      photosHashVerified: 2,
+    });
+    assert.equal(withM.methodology.protocolVersion, '2.1');
+  });
+
+  test('without a manifest the claim stays but is flagged as unquantified', () => {
+    const r = build(inspection());
+    assert.equal(r.methodology.enforcementEvidence, null);
+    assert.equal(r.methodology.protocolVersion, 'unversioned');
+    assert.ok(r.missingInputs.some((x) => x.includes('enforcementEvidence')));
+  });
+
+  test('photo counts are in PROTOCOL order and use step names, not raw keys', () => {
+    const i = inspection();
+    i.photos = [
+      { ...i.photos[0]!, id: 'a', stage: 'test_squares' },
+      { ...i.photos[0]!, id: 'b', stage: 'arrival' },
+      { ...i.photos[0]!, id: 'c', stage: 'facets' },
+      { ...i.photos[0]!, id: 'd', stage: 'facets' },
+    ];
+    const m = build(i).methodology;
+    // arrival(1) -> facets(4) -> test_squares(5); alphabetical would invert these.
+    assert.deepEqual(m.photosByStep, [
+      { step: 'Arrival Log', count: 1 },
+      { step: 'Roof Facets & Measurements', count: 2 },
+      { step: 'Test Squares', count: 1 },
+    ]);
+  });
+
+  test('unrecognised photo stages are surfaced as a sync warning, not dropped', () => {
+    const i = inspection();
+    i.photos = [{ ...i.photos[0]!, id: 'legacy', stage: 'S3' }];
+    const r = build(i);
+    assert.deepEqual(r.methodology.unknownSteps, ['S3']);
+    assert.ok(r.missingInputs.some((x) => x.includes('out of sync')));
+  });
+
+  test('tie-in marking protocols are reported only when actually applied', () => {
+    assert.deepEqual(build(inspection()).methodology.tieInProtocolsApplied, []);
+    const i = inspection();
+    i.slopes[0]!.tieInValley = true;
+    i.slopes[1]!.tieInHipRidge = true;
+    assert.deepEqual(build(i).methodology.tieInProtocolsApplied, ['Valley', 'Hip / Ridge']);
+  });
+
+  test('conditions come from the arrival log when present', () => {
+    const i = inspection({
+      arrival: { timeLocal: '2026-05-20T09:15:00', sky: 'Partly Cloudy',
+        windCondition: 'Light', temp: '72F', personnelPresent: ['Homeowner', 'Adjuster'],
+        latitude: null, longitude: null },
+    });
+    const c = build(i).methodology.conditions!;
+    assert.equal(c.sky, 'Partly Cloudy');
+    assert.deepEqual(c.personnelPresent, ['Homeowner', 'Adjuster']);
+  });
+
+  test('capture record counts real records', () => {
+    const m = build(inspection()).methodology;
+    const byItem = Object.fromEntries(m.captureRecord.map((r) => [r.item, r.recorded]));
+    assert.equal(byItem['Roof facets documented'], sampleInspection.slopes.length);
+    assert.equal(byItem['Total evidence photographs'], sampleInspection.photos.length);
+  });
+});

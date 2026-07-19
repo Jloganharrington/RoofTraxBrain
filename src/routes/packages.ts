@@ -203,6 +203,9 @@ packagesRouter.get('/submissions/:id/report-data', requireAdminOrMachine, async 
 
   const data = buildReportData(sub.inspection, config, {
     ai: (sub.aiNarratives as ForensicNarratives | null) ?? null,
+    // Grounds the methodology enforcement evidence in what intake actually
+    // verified, rather than asserting enforcement unquantified.
+    manifest: sub.manifest,
   });
 
   // Surface incompleteness in the response envelope too, so a consumer that

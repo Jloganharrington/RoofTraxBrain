@@ -19,6 +19,222 @@
   "certificationText": "I certify that the observations, measurements, and photographic evidence contained in this report were made by me or under my direct supervision, and accurately represent the condition of the property identified above on the date of inspection. This report constitutes a contractor scope submission and does not represent a coverage determination.",
   "concealedConditionProcedure": "1. Stop affected work when practical.\n2. Photograph and measure the condition.\n3. Notify the homeowner.\n4. Notify the carrier and provide a reinspection opportunity when appropriate.\n5. Prepare a written change order.\n6. Apply the previously disclosed unit price.\n7. Obtain homeowner authorization.\n8. Preserve invoices and installation photographs.\n\nThis procedure applies with particular care to concealed sheathing conditions discovered during tear-off.",
   "forensicSummary": "Based on the physical findings documented during the inspection on the date of loss, including storm-event verification, test-square hit counts, and measured damage indicators, the roof system requires full-slope replacement to restore code-compliant and reasonably uniform conditions. This conclusion is the contractor's professional assessment of the physical condition observed — it is not a coverage determination.",
+  "methodology": {
+    "protocolName": "RoofTrax Forensic Inspection Protocol",
+    "protocolVersion": "2.1",
+    "enforcementStatement": "This inspection was captured through a software-enforced protocol. Each step below defines the evidence it requires, and the application blocked submission until every applicable requirement was satisfied. At submission the gate was re-evaluated on the server from the stored records, and every photograph was re-hashed against the submission manifest — the capturing device could not bypass either check.",
+    "enforcementEvidence": {
+      "hardDeficienciesAtSubmission": 0,
+      "advisoryFlagsAtSubmission": 0,
+      "photosHashVerified": 6
+    },
+    "conditions": {
+      "inspectedAt": "2026-05-20T09:15:00",
+      "sky": "Partly Cloudy",
+      "windCondition": "Light, 5-10 mph",
+      "temp": "74F",
+      "personnelPresent": [
+        "Homeowner",
+        "Contractor/Rep"
+      ]
+    },
+    "inspector": {
+      "name": "Sam Whitfield",
+      "credentials": "HAAG Certified Inspector — Residential Roofs (HAAG Engineering)",
+      "licenseNumber": "VA-CLASS-A-PLACEHOLDER"
+    },
+    "equipment": [
+      "Extension ladder",
+      "Chalk line",
+      "Hail gauge",
+      "Pitch gauge",
+      "GPS camera"
+    ],
+    "standards": {
+      "testSquareProtocol": "A 10′×10′ test square is chalked on each accessible directional slope. Each impact within the square is circled and photographed with a scale reference; hits are counted and classified. A documented zero-hit square is a valid finding.",
+      "markingStandard": "All documented damage is circled in contrasting chalk/keel and photographed wide, mid, and close (a wide/mid/close triad) with a scale reference in the close photo.",
+      "photoStandard": "Full-resolution originals are preserved unaltered. Every photo carries capture time (UTC), GPS coordinates, and a content hash (SHA-256) recorded at capture for chain-of-custody."
+    },
+    "tieInProtocolsApplied": [
+      "Valley",
+      "Hip / Ridge"
+    ],
+    "steps": [
+      {
+        "order": 1,
+        "name": "Arrival Log",
+        "description": "On-site conditions (sky, wind, temp), personnel present, GPS + time.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 2,
+        "name": "Property Profile",
+        "description": "Property & construction description — type, stories, roof age with basis, deck type.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 3,
+        "name": "Elevation Walk",
+        "description": "A wide photo of each of the four elevations, plus the damage-found determinations.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 4,
+        "name": "Roof Facets & Measurements",
+        "description": "Every roof facet with area, material, pitch and damage documentation, plus whole-roof linears.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 5,
+        "name": "Test Squares",
+        "description": "A test-square photo on every facet that carries hail damage.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 6,
+        "name": "Roof Components & Penetrations",
+        "description": "Existing components and roof penetrations, each with a photo.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 7,
+        "name": "Roofing Product ID",
+        "description": "At least one roofing-product identification record.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 8,
+        "name": "Siding Inspection",
+        "description": "Siding facets: damage classification, facet photo, and per-component photos.",
+        "applied": false,
+        "notApplicableReason": "Not applicable — no siding damage was identified."
+      },
+      {
+        "order": 9,
+        "name": "Collateral Sweep",
+        "description": "Labeled collateral photos, roof-level then ground-level.",
+        "applied": false,
+        "notApplicableReason": "Not applicable — no collateral damage was identified."
+      },
+      {
+        "order": 10,
+        "name": "Interior / Attic",
+        "description": "Interior/attic evidence, or an explicit no-interior-claim waiver.",
+        "applied": false,
+        "notApplicableReason": "Not applicable — no interior damage was identified."
+      },
+      {
+        "order": 11,
+        "name": "Repairability Assessment",
+        "description": "Explicit repair-vs-replace field determination — never defaulted.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 12,
+        "name": "Temporary Repairs & Mitigation",
+        "description": "Emergency tarping / mitigation performed, with before & after photos.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 13,
+        "name": "Homeowner",
+        "description": "Factual homeowner intake (prior repairs, prior claims).",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 14,
+        "name": "Existing / Unrelated Conditions",
+        "description": "Pre-existing or non-storm conditions explicitly excluded from the claim.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 15,
+        "name": "Declaration",
+        "description": "The inspector signs off on the completeness of the capture.",
+        "applied": true,
+        "notApplicableReason": null
+      },
+      {
+        "order": 16,
+        "name": "Readiness & Submit",
+        "description": "Zero hard deficiencies remain and the package is confirmed ready.",
+        "applied": true,
+        "notApplicableReason": null
+      }
+    ],
+    "captureRecord": [
+      {
+        "item": "Elevations photographed",
+        "recorded": 4
+      },
+      {
+        "item": "Roof facets documented",
+        "recorded": 2
+      },
+      {
+        "item": "Siding facets documented",
+        "recorded": 2
+      },
+      {
+        "item": "Test squares marked",
+        "recorded": 2
+      },
+      {
+        "item": "Impacts counted (all squares)",
+        "recorded": 16
+      },
+      {
+        "item": "Damage instances documented",
+        "recorded": 3
+      },
+      {
+        "item": "Components & penetrations",
+        "recorded": 5
+      },
+      {
+        "item": "Interior observations",
+        "recorded": 1
+      },
+      {
+        "item": "Measurements recorded",
+        "recorded": 5
+      },
+      {
+        "item": "Total evidence photographs",
+        "recorded": 6
+      }
+    ],
+    "photosByStep": [
+      {
+        "step": "Arrival Log",
+        "count": 1
+      },
+      {
+        "step": "Elevation Walk",
+        "count": 1
+      },
+      {
+        "step": "Roof Facets & Measurements",
+        "count": 3
+      },
+      {
+        "step": "Test Squares",
+        "count": 1
+      }
+    ],
+    "unknownSteps": []
+  },
   "propertySummary": {
     "propertyType": "Single-family detached",
     "stories": "2",

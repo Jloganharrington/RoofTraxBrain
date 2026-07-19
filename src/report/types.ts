@@ -78,6 +78,61 @@ export interface ReportConstruction {
   interiorAreasInspected: string[];
 }
 
+// ---------- Inspection Methodology & Protocol (folds into §3) ----------
+
+export interface ReportMethodologyStep {
+  order: number;
+  name: string;
+  description: string;
+  applied: boolean;
+  /** Why a step did not apply — stated, not silently omitted. */
+  notApplicableReason: string | null;
+}
+
+export interface ReportMethodology {
+  protocolName: string;
+  protocolVersion: string;
+  /**
+   * The claim that distinguishes this from a narrative "we followed a
+   * protocol": the application BLOCKED submission until every applicable
+   * requirement was met, and the gate was re-evaluated server-side from stored
+   * records so the device could not bypass it.
+   */
+  enforcementStatement: string;
+  /** Grounded evidence for the statement above; null when not supplied. */
+  enforcementEvidence: {
+    hardDeficienciesAtSubmission: number;
+    advisoryFlagsAtSubmission: number;
+    photosHashVerified: number;
+  } | null;
+  conditions: {
+    inspectedAt: string | null;
+    sky: string | null;
+    windCondition: string | null;
+    temp: string | null;
+    personnelPresent: string[];
+  } | null;
+  inspector: {
+    name: string;
+    credentials: string | null;
+    licenseNumber: string | null;
+  };
+  equipment: string[];
+  standards: {
+    testSquareProtocol: string;
+    markingStandard: string;
+    photoStandard: string;
+  };
+  /** Tie-in marking protocols actually applied on this inspection. */
+  tieInProtocolsApplied: string[];
+  steps: ReportMethodologyStep[];
+  captureRecord: Array<{ item: string; recorded: number }>;
+  /** Photo counts per step, in protocol order (not alphabetical). */
+  photosByStep: Array<{ step: string; count: number }>;
+  /** Photo stages the Brain does not recognise — a sync warning, not hidden. */
+  unknownSteps: string[];
+}
+
 export interface ReportRestorationReport {
   purposeAndScope: string;
   construction: ReportConstruction;
@@ -195,6 +250,7 @@ export interface ReportDataV2 {
 
   // ---- structured ----
   propertySummary: ReportPropertySummary;
+  methodology: ReportMethodology;
   areasImpacted: AreaImpactEntry[];
   restorationReport: ReportRestorationReport;
   photos: ReportPhoto[];

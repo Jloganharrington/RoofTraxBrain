@@ -19,8 +19,12 @@ import type { SubmittedInspection, ClaimArea, CaptureContext } from '../submissi
 import type { ResolvedConfig } from '../tenancy/types.js';
 import type { ScopeResult } from '../scope/types.js';
 import type { ForensicNarratives } from '../ai/types.js';
+import { PROTOCOL_STEPS, STEP_BY_KEY, type DamageFlagKey } from '../protocol/steps.js';
+import type { SubmissionManifestV1 } from '../submissions/types.js';
 import type {
   ReportDataV2,
+  ReportMethodology,
+  ReportMethodologyStep,
   ReportPhoto,
   ObservedDamageEntry,
   ScopeCategory,
@@ -46,6 +50,8 @@ export interface BuildReportDataOptions {
   generatedAt?: Date;
   attachments?: Partial<Record<keyof ReportDataV2['exhibits'], boolean>>;
   documentIndex?: Array<{ filename: string; category: string }>;
+  /** Submission manifest — grounds the methodology enforcement evidence. */
+  manifest?: SubmissionManifestV1 | null;
   /** Office-supplied fields the field app does not capture. */
   office?: {
     adjusterName?: string | null;
@@ -383,6 +389,133 @@ const EXHIBIT_DESCRIPTIONS: Record<keyof ReportDataV2['exhibits'], string> = {
     'Permit application, fee schedule, issued permit, inspection requests and results, and closed-permit record.',
 };
 
+
+// ---------------------------------------------------------------------------
+// Inspection Methodology & Protocol
+// ---------------------------------------------------------------------------
+
+// Why a conditional step did not run. Stated explicitly rather than silently
+// omitted: a reader seeing 11 of 16 steps should know the protocol ADAPTED by
+// design, not that five steps were skipped.
+const FLAG_REASON: Record<DamageFlagKey, string> = {
+  roofDamageFound: 'no roof damage was identified',
+  sidingDamageFound: 'no siding damage was identified',
+  collateralDamageFound: 'no collateral damage was identified',
+  interiorDamageFound: 'no interior damage was identified',
+};
+
+// This is the claim that separates a documented method from an assertion. It is
+// only true because the app gates capture AND intake re-derives the gate
+// server-side from stored rows — a field device cannot submit around it.
+const ENFORCEMENT_STATEMENT =
+  'This inspection was captured through a software-enforced protocol. Each step below ' +
+  'defines the evidence it requires, and the application blocked submission until every ' +
+  'applicable requirement was satisfied. At submission the gate was re-evaluated on the ' +
+  'server from the stored records, and every photograph was re-hashed against the ' +
+  'submission manifest — the capturing device could not bypass either check.';
+
+function buildMethodology(
+  inspection: SubmittedInspection,
+  config: ResolvedConfig,
+  impact: ImpactMap,
+  manifest: SubmissionManifestV1 | null,
+): ReportMethodology {
+  const flags: Record<DamageFlagKey, boolean> = {
+    roofDamageFound: impact.roof,
+    sidingDamageFound: impact.siding,
+    collateralDamageFound: impact.collateral,
+    interiorDamageFound: impact.interior,
+  };
+
+  const steps: ReportMethodologyStep[] = PROTOCOL_STEPS.map((def) => {
+    const applied = def.appliesWhen.length === 0 || def.appliesWhen.some((f) => flags[f]);
+    return {
+      order: def.order,
+      name: def.name,
+      description: def.description,
+      applied,
+      notApplicableReason: applied
+        ? null
+        : `Not applicable — ${def.appliesWhen.map((f) => FLAG_REASON[f]).join(' and ')}.`,
+    };
+  });
+
+  // Photo counts in PROTOCOL order, not alphabetical, and by step name.
+  const counts = new Map<string, number>();
+  for (const p of inspection.photos) counts.set(p.stage, (counts.get(p.stage) ?? 0) + 1);
+  const photosByStep = PROTOCOL_STEPS.filter((d) => counts.has(d.key)).map((d) => ({
+    step: d.name,
+    count: counts.get(d.key) ?? 0,
+  }));
+  // Stages we do not recognise (legacy S0..S9, or a step added to the app and
+  // not mirrored here). Surfaced rather than dropped.
+  const unknownSteps = [...counts.keys()].filter((k) => !STEP_BY_KEY.has(k));
+
+  const tieIns: string[] = [];
+  if (inspection.slopes.some((s) => s.tieInValley)) tieIns.push('Valley');
+  if (inspection.slopes.some((s) => s.tieInHipRidge)) tieIns.push('Hip / Ridge');
+
+  const arrival = inspection.arrival;
+  const legacy = inspection.methodology;
+  const m = config.company.methodologyTemplate;
+
+  const credentials = (inspection.inspector.certifications ?? [])
+    .map((c) => (c.issuingBody ? `${c.name} (${c.issuingBody})` : c.name))
+    .join('; ');
+
+  const totalHits = inspection.testSquares.reduce((n, ts) => n + ts.hitCount, 0);
+
+  return {
+    protocolName: 'RoofTrax Forensic Inspection Protocol',
+    protocolVersion: manifest?.protocolVersion ?? 'unversioned',
+    enforcementStatement: ENFORCEMENT_STATEMENT,
+    enforcementEvidence: manifest
+      ? {
+          hardDeficienciesAtSubmission: manifest.gateResults?.deficiencies?.length ?? 0,
+          advisoryFlagsAtSubmission: manifest.gateResults?.softFlags?.length ?? 0,
+          photosHashVerified: manifest.photoHashes?.length ?? 0,
+        }
+      : null,
+    conditions:
+      arrival || legacy
+        ? {
+            inspectedAt: arrival?.timeLocal ?? legacy?.inspectedAt ?? null,
+            sky: arrival?.sky ?? null,
+            windCondition: arrival?.windCondition ?? null,
+            temp: arrival?.temp ?? null,
+            personnelPresent: arrival?.personnelPresent ?? [],
+          }
+        : null,
+    inspector: {
+      name: inspection.inspector.name,
+      credentials: credentials || null,
+      licenseNumber: inspection.inspector.licenseNumber,
+    },
+    equipment: legacy?.equipment?.length ? legacy.equipment : m.equipmentBaseline,
+    standards: {
+      testSquareProtocol: m.testSquareProtocol,
+      markingStandard: m.markingStandard,
+      photoStandard: m.photoStandard,
+    },
+    tieInProtocolsApplied: tieIns,
+    steps,
+    captureRecord: [
+      { item: 'Elevations photographed', recorded: inspection.elevations.length },
+      { item: 'Roof facets documented', recorded: inspection.slopes.length },
+      { item: 'Siding facets documented', recorded: (inspection.sidingFacets ?? []).length },
+      { item: 'Test squares marked', recorded: inspection.testSquares.length },
+      { item: 'Impacts counted (all squares)', recorded: totalHits },
+      { item: 'Damage instances documented', recorded: inspection.damageInstances.length },
+      { item: 'Components & penetrations', recorded: inspection.components.length + inspection.penetrations.length },
+      { item: 'Interior observations', recorded: inspection.interiorObservations.length },
+      { item: 'Measurements recorded', recorded: inspection.measurements.length },
+      { item: 'Total evidence photographs', recorded: inspection.photos.length },
+    ],
+    photosByStep,
+    unknownSteps,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Main entry point
 // ---------------------------------------------------------------------------
@@ -409,6 +542,14 @@ export function buildReportData(
   if (!pp0) note('propertyProfile: not captured by the app');
   if (ps?.roofAgeYears != null && !ps?.roofAgeBasis) {
     note('propertySummary.roofAgeBasis: roof age given without a stated basis');
+  }
+
+  const methodology = buildMethodology(inspection, config, impact, opts.manifest ?? null);
+  if (!opts.manifest) {
+    note('methodology.enforcementEvidence: submission manifest not supplied — enforcement is stated but unquantified');
+  }
+  if (methodology.unknownSteps.length) {
+    note(`methodology: unrecognised photo stages (protocol out of sync): ${methodology.unknownSteps.join(', ')}`);
   }
 
   const observedDamage = buildObservedDamage(inspection, impact);
@@ -546,6 +687,7 @@ export function buildReportData(
     ].join('\n'),
     forensicSummary: opts.ai?.conclusion.statement ?? '',
 
+    methodology,
     propertySummary: {
       propertyType: ps?.propertyType ?? null,
       stories: ps?.stories ?? null,

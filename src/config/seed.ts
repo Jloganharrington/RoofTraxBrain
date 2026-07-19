@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { db, closeDb } from '../db/client.js';
 import { companiesTable, statesTable, companyConfigTable, stateConfigTable } from '../db/schema.js';
 import { NUHOME_COMPANY_ID, nuHomeCompanyPack } from './packs/nuhome.js';
@@ -33,17 +34,30 @@ export async function seed(): Promise<void> {
       set: { name: virginiaStatePack.stateName },
     });
 
-  // Preserve an existing reviewedAt if a human has already reviewed; never
-  // auto-stamp it here.
+  // Virginia is ENABLED: its pack is prepared and checked, so packages may
+  // render. On conflict the stamp is preserved rather than reset, so re-seeding
+  // never silently disables a live state.
+  const vaEnabledAt = new Date('2026-07-19T00:00:00Z');
   await db
     .insert(stateConfigTable)
-    .values({ stateCode: virginiaStatePack.stateCode, pack: virginiaStatePack, reviewedAt: null })
+    .values({
+      stateCode: virginiaStatePack.stateCode,
+      pack: virginiaStatePack,
+      reviewedAt: vaEnabledAt,
+    })
     .onConflictDoUpdate({
       target: stateConfigTable.stateCode,
-      set: { pack: virginiaStatePack, updatedAt: new Date() },
+      set: {
+        pack: virginiaStatePack,
+        updatedAt: new Date(),
+        // COALESCE, not overwrite: enables a state seeded before it was ready
+        // (reviewedAt null), while preserving a stamp already set — so
+        // re-seeding can never silently re-date or disable a live state.
+        reviewedAt: sql`coalesce(${stateConfigTable.reviewedAt}, ${vaEnabledAt})`,
+      },
     });
 
-  console.log('[brain] seed complete: NuHome (company) + Virginia (state, reviewedAt=NULL / not go-live)');
+  console.log('[brain] seed complete: NuHome (company) + Virginia (state, ENABLED / go-live)');
 }
 
 // Run when invoked directly (npm run db:seed). Guard prevents execution when

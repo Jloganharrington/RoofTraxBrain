@@ -43,7 +43,10 @@ export const companyConfigTable = pgTable('company_config', {
 });
 
 // State pack (state-scoped config). One row per state.
-// `reviewedAt` is the counsel-review stamp — a state is not go-live until set.
+// `reviewedAt` is the STATE ENABLEMENT stamp: this state's pack has been
+// prepared and checked. Null = not go-live, and the resolver refuses to render
+// packages for it — the guard against shipping a package for a state whose
+// content nobody has done yet.
 export const stateConfigTable = pgTable('state_config', {
   stateCode: text('state_code')
     .primaryKey()

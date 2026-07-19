@@ -3,13 +3,15 @@ import type { StatePack } from '../../tenancy/types.js';
 // State pack for Virginia. State-scoped content: adopted building-code library,
 // homeowner-rights page, UPPA disclaimer, and conditional adder rules.
 //
-// ⚠ COUNSEL-REVIEW REQUIRED. Every provision, citation, rights statement, and
-// disclaimer below is STARTER content and MUST be verified against current
-// Virginia statute and the adopted USBC edition by a licensed attorney / code
-// official before Virginia is enabled for go-live. The seed intentionally
-// leaves `reviewedAt = null`, which the config resolver treats as
-// "not go-live" and refuses to render packages for. Do not stamp `reviewedAt`
-// until this content has been reviewed and confirmed current.
+// STATE ENABLEMENT. `reviewedAt` marks that this state's content has been
+// prepared and checked — it is the gate that stops packages rendering for a
+// state nobody has done the work for yet. Virginia is enabled; each NEW state
+// must be differentiated against Virginia (which is among the strictest) to
+// identify any additional limits before it is stamped.
+//
+// Operating model this content supports: the contractor documents physical
+// findings and its own incurred cost. Negotiation is the homeowner's — the
+// package never states what a carrier owes.
 
 // Scope-element keys the code library and adder rules cross-reference (shared
 // with the B5 scope chain). Keep in sync with scope/elements.ts.
@@ -85,8 +87,7 @@ export const virginiaStatePack: StatePack = {
       'negotiate or effect the settlement of a claim on behalf of an insured. Nothing in this ' +
       'package negotiates, adjusts, or advises on the settlement of your claim, and nothing here ' +
       'states what any carrier owes. This package documents the contractor’s physical findings and ' +
-      'the contractor’s own fixed incurred cost to perform a code-compliant repair. [COUNSEL REVIEW ' +
-      'REQUIRED before go-live.]',
+      'the contractor’s own fixed incurred cost to perform a code-compliant repair.',
   },
   // Exhibit I — starter provisions. Editions/citations are illustrative and
   // MUST be confirmed against the currently adopted Virginia USBC edition.

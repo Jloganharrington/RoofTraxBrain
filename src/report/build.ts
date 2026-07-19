@@ -182,7 +182,21 @@ const CLAIM_AREAS = new Set<string>(ALL_AREAS);
 // The field app's courier nests the signature under `signatureOnFile` and can
 // send a null name; earlier submissions used three flat signature fields.
 // Normalise both here rather than scattering fallbacks through the builder.
-export function resolveInspector(inspector: SubmittedInspection['inspector']) {
+export function resolveInspector(
+  inspector: SubmittedInspection['inspector'] | null | undefined,
+) {
+  // The envelope validator does not require `inspector`, so a payload can omit
+  // the whole block. Reading through it unguarded threw and took the entire
+  // report down with a 500. Degrade to a named placeholder instead.
+  if (!inspector) {
+    return {
+      name: 'Inspector on file',
+      licenseNumber: null,
+      signatureUrl: null,
+      signatureSha256: null,
+      signedAt: null,
+    };
+  }
   return {
     name: inspector.name?.trim() || 'Inspector on file',
     licenseNumber: inspector.licenseNumber ?? null,
@@ -536,8 +550,8 @@ function buildMethodology(
   const m = config.company.methodologyTemplate;
 
   const who = resolveInspector(inspection.inspector);
-  const whoM = resolveInspector(inspection.inspector);
-  const credentials = (inspection.inspector.certifications ?? [])
+  const whoM = resolveInspector(inspection.inspector);  // null-safe
+  const credentials = (inspection.inspector?.certifications ?? [])
     .map((c) => (c.issuingBody ? `${c.name} (${c.issuingBody})` : c.name))
     .join('; ');
 
@@ -614,6 +628,10 @@ export function buildReportData(
     note(`payload.${key}: absent from the submission — treated as empty`);
   }
 
+  if (!inspection.inspector) {
+    note('payload.inspector: absent from the submission — the report cannot name who inspected');
+  }
+
   const { impact, derived } = resolveAreasImpacted(inspection);
   if (derived) note('areasImpacted: derived from records — app did not send damage flags');
   if (inspection.damageFlags && inspection.damageFlags.interiorDamageFound === undefined) {
@@ -666,7 +684,7 @@ export function buildReportData(
 
   const ra = inspection.repairabilityAssessment ?? null;
   const who = resolveInspector(inspection.inspector);
-  const credentials = (inspection.inspector.certifications ?? [])
+  const credentials = (inspection.inspector?.certifications ?? [])
     .map((c) => (c.issuingBody ? `${c.name} (${c.issuingBody})` : c.name))
     .join('; ');
   if (!ra) note('repairabilityAssessment: no field assessment recorded — section will be omitted');
@@ -730,7 +748,11 @@ export function buildReportData(
   }));
 
   const office = opts.office ?? {};
-  const address = inspection.property.address;
+  // `property.address` is the one field the envelope validator enforces, so
+  // this should never be absent in practice — guarded anyway so no caller can
+  // turn a data question into a 500.
+  const property = inspection.property ?? ({} as SubmittedInspection['property']);
+  const address = property.address ?? '';
 
   return {
     schemaVersion: 2,
@@ -740,12 +762,12 @@ export function buildReportData(
     coverPhotoTag: '',
     propertyAddress: address,
     propertyAddressShort: address.split(',')[0] ?? address,
-    customerName: inspection.property.insuredName ?? '',
-    carrier: inspection.property.carrier ?? '',
-    claimNumber: inspection.property.claimNumber ?? '',
-    policyNumber: inspection.property.policyNumber ?? '',
+    customerName: property.insuredName ?? '',
+    carrier: property.carrier ?? '',
+    claimNumber: property.claimNumber ?? '',
+    policyNumber: property.policyNumber ?? '',
     adjusterName: office.adjusterName ?? '',
-    lossDate: inspection.property.dateOfLoss ?? '',
+    lossDate: property.dateOfLoss ?? '',
     dateFiled: office.dateFiled ?? '',
     inspectorName: who.name,
     inspectorTitle: credentials || 'Field Inspector',

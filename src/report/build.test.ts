@@ -593,3 +593,49 @@ describe('sparse payload robustness', () => {
     assert.equal(r.missingInputs.filter((m) => m.startsWith('payload.')).length, 0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Structural guard: the envelope validator enforces only package identity +
+// photos, so ANY other top-level key can legally be absent from a real payload.
+// A report is a data question — it must never answer with a 500.
+// ---------------------------------------------------------------------------
+
+describe('no top-level key is load-bearing', () => {
+  test('dropping any single top-level key still builds a report', () => {
+    const base = structuredClone(sampleInspection) as unknown as Record<string, unknown>;
+    const failures: string[] = [];
+
+    for (const key of Object.keys(base)) {
+      const patched = { ...base };
+      delete patched[key];
+      try {
+        buildReportData(patched as never, sampleConfig, { generatedAt: AT });
+      } catch (err) {
+        failures.push(`${key}: ${(err as Error).message}`);
+      }
+    }
+
+    assert.deepEqual(failures, [], 'unguarded top-level reads: ' + failures.join(' | '));
+  });
+
+  test('the barest legal envelope still builds', () => {
+    // Exactly what the validator requires and nothing more.
+    const bare = {
+      id: 'x', companyId: 'RFTRAX', stateCode: 'VA',
+      property: { address: '1 Test St' }, photos: [],
+    } as never;
+    const r = buildReportData(bare, sampleConfig, { generatedAt: AT });
+    assert.equal(r.schemaVersion, 2);
+    assert.equal(r.methodology.steps.length, 16);
+    // And it says loudly what it did not receive.
+    assert.ok(r.missingInputs.length > 0);
+  });
+
+  test('a missing inspector is reported, and never renders as blank', () => {
+    const noInspector = structuredClone(sampleInspection) as unknown as Record<string, unknown>;
+    delete noInspector['inspector'];
+    const r = buildReportData(noInspector as never, sampleConfig, { generatedAt: AT });
+    assert.equal(r.inspectorName, 'Inspector on file');
+    assert.ok(r.missingInputs.some((m) => m.includes('payload.inspector')));
+  });
+});

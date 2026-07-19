@@ -200,16 +200,32 @@ function buildObservedDamage(
 
 // The template interpolates the verdict straight into `class="verdict ${v}"`,
 // and only `.replace` / `.repair` / `.monitor` are styled. Anything else — a
-// capitalised word, or worse a multi-word string like "No action" — produces a
-// broken class attribute. So this returns a bare token or empty, never prose.
+// capitalised word, or a multi-word string like "No action" — produces a broken
+// class attribute. So this returns a bare token or empty, never prose.
+//
+// These vocabularies are CLOSED enums in the app schema, so map them explicitly
+// rather than keyword-matching. Keyword matching missed `absent`, which silently
+// dropped the verdict on a missing drip edge — a real scope line, and money off
+// the estimate.
+const COMPONENT_STATUS_VERDICT: Record<string, ScopeItem['verdict']> = {
+  // An absent component has to be installed — that is replacement scope.
+  absent: 'replace',
+  present: 'monitor',
+  // Genuinely unknown: no verdict rather than a guess.
+  not_determined: '',
+};
+
+const INTERIOR_OBSERVATION_VERDICT: Record<string, ScopeItem['verdict']> = {
+  ceiling_stain: 'repair',
+  wall_stain: 'repair',
+  moisture_reading: 'monitor',
+  attic_pass: 'monitor',
+  other: '',
+};
+
 export function verdictForStatus(status: string): ScopeItem['verdict'] {
-  const s = status.toLowerCase();
-  if (['damaged', 'failed', 'deteriorated', 'missing', 'compromised', 'fractured'].some((k) => s.includes(k))) {
-    return 'replace';
-  }
-  if (['repairable', 'minor', 'serviceable'].some((k) => s.includes(k))) return 'repair';
-  if (['functional', 'ok', 'good', 'intact', 'no damage'].some((k) => s.includes(k))) return 'monitor';
-  return '';
+  const s = status.trim().toLowerCase();
+  return COMPONENT_STATUS_VERDICT[s] ?? INTERIOR_OBSERVATION_VERDICT[s] ?? '';
 }
 
 function buildComponents(

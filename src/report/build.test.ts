@@ -233,8 +233,12 @@ describe('HTML template contract', () => {
   test('verdict is a bare lowercase CSS token — never prose or multi-word', () => {
     // `class="verdict ${verdict}"`: "No action" would emit two classes and break.
     const allowed = new Set(['replace', 'repair', 'monitor', '']);
-    assert.equal(verdictForStatus('Damaged'), 'replace');
-    assert.equal(verdictForStatus('functional'), 'monitor');
+    // Closed enums from the app schema — mapped explicitly, not keyword-guessed.
+    assert.equal(verdictForStatus('absent'), 'replace');   // must be installed
+    assert.equal(verdictForStatus('present'), 'monitor');
+    assert.equal(verdictForStatus('not_determined'), '');
+    assert.equal(verdictForStatus('ceiling_stain'), 'repair');
+    assert.equal(verdictForStatus('attic_pass'), 'monitor');
     assert.equal(verdictForStatus('something unmapped'), '');
     for (const v of Object.values(verdictForStatus)) void v;
 

@@ -216,19 +216,19 @@
             "component": "drip_edge",
             "condition": "absent",
             "method": "Visual inspection",
-            "verdict": ""
+            "verdict": "replace"
           },
           {
             "component": "decking",
             "condition": "deteriorated",
             "method": "Visual inspection",
-            "verdict": "replace"
+            "verdict": ""
           },
           {
             "component": "ventilation",
             "condition": "present",
             "method": "Visual inspection",
-            "verdict": ""
+            "verdict": "monitor"
           }
         ]
       },

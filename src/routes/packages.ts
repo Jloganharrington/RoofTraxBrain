@@ -137,10 +137,25 @@ packagesRouter.post('/submissions/:id/package', requireAdminOrMachine, async (re
     sub.manifest.signatureOnFile?.url ?? inspection.inspector.signatureUrl ?? null;
   const signatureImageBytes = await fetchSignatureBytes(fetcher, signatureUrl);
 
-  const result = await assemblePackage(inspection, config, sub.manifest, fetcher, {
-    narratives,
-    signatureImageBytes,
-  });
+  let result;
+  try {
+    result = await assemblePackage(inspection, config, sub.manifest, fetcher, {
+      narratives,
+      signatureImageBytes,
+    });
+  } catch (err) {
+    // Assembly (pdf-lib exhibit rendering) was throwing into Express's generic
+    // 500, which hid which exhibit/field failed. Surface it so a single retry
+    // reveals the actual cause instead of one blind fix per republish cycle.
+    await setStatus(sub.id, 'generation_failed');
+    const e = err as Error;
+    res.status(500).json({
+      error: 'assembly_failed',
+      detail: e.message,
+      stack: (e.stack ?? '').split('\n').slice(0, 6),
+    });
+    return;
+  }
 
   if (!result.ok) {
     await setStatus(sub.id, 'rejected');

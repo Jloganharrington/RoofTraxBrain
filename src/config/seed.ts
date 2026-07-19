@@ -46,11 +46,16 @@ export async function seed(): Promise<void> {
   console.log('[brain] seed complete: NuHome (company) + Virginia (state, reviewedAt=NULL / not go-live)');
 }
 
-// Run when invoked directly (npm run db:seed).
-seed()
-  .then(() => closeDb())
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error('[brain] seed failed:', err);
-    process.exit(1);
-  });
+// Run when invoked directly (npm run db:seed). Guard prevents execution when
+// this module is imported by index.ts for auto-seeding on startup.
+import { fileURLToPath } from 'url';
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+  seed()
+    .then(() => closeDb())
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error('[brain] seed failed:', err);
+      process.exit(1);
+    });
+}

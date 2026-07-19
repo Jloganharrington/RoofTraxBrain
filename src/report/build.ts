@@ -304,6 +304,29 @@ function buildCodeCitations(config: ResolvedConfig, impact: ImpactMap): ReportCo
 // Formatting helpers — the template prints these verbatim, so units belong here.
 // ---------------------------------------------------------------------------
 
+// The app captures field-test findings as discrete booleans so the report can
+// never assert brittleness or discontinuation that was not actually observed.
+// The template prints `fieldTestFindings` as text, so an object would render as
+// "[object Object]" — compose prose here, stating ONLY what was recorded.
+export function composeFieldTestProse(
+  f: NonNullable<SubmittedInspection['repairabilityAssessment']>['fieldTestFindings'],
+): string {
+  const parts: string[] = [];
+  if (f.repairAttemptMade === true) parts.push('A repair attempt was performed on site.');
+  else if (f.repairAttemptMade === false) parts.push('No repair attempt was performed.');
+  if (f.adjacentShinglesFractured === true) {
+    parts.push('Adjacent shingles fractured during the attempt, indicating brittleness.');
+  } else if (f.adjacentShinglesFractured === false) {
+    parts.push('Adjacent shingles did not fracture during the attempt.');
+  }
+  if (f.matchingMaterialSourceable === true) parts.push('Matching material was sourceable.');
+  else if (f.matchingMaterialSourceable === false) parts.push('Matching material could not be sourced.');
+  if (f.productDiscontinued === true) parts.push('The installed product is discontinued.');
+  else if (f.productDiscontinued === false) parts.push('The installed product remains available.');
+  if (f.notes) parts.push(f.notes);
+  return parts.join(' ');
+}
+
 const DETERMINATION_PROSE: Record<string, string> = {
   repairable: 'Repairable in place.',
   not_repairable: 'Not repairable in place — full replacement required.',
@@ -350,11 +373,12 @@ export function buildReportData(
   }
 
   const generatedAt = opts.generatedAt ?? new Date();
-  const ps = inspection.propertySummary;
-  const cd = inspection.constructionDescription;
-  if (!ps) note('propertySummary: not captured by the app');
-  if (!cd) note('constructionDescription: not captured by the app');
-  if (ps?.roofAgeYears != null && !ps.roofAgeBasis) {
+  // One block on the app side; the report splits it across two sections.
+  const pp0 = inspection.propertyProfile;
+  const ps = pp0;
+  const cd = pp0;
+  if (!pp0) note('propertyProfile: not captured by the app');
+  if (ps?.roofAgeYears != null && !ps?.roofAgeBasis) {
     note('propertySummary.roofAgeBasis: roof age given without a stated basis');
   }
 
@@ -389,7 +413,7 @@ export function buildReportData(
     .map((c) => (c.issuingBody ? `${c.name} (${c.issuingBody})` : c.name))
     .join('; ');
   if (!ra) note('repairabilityAssessment: no field assessment recorded — section will be omitted');
-  else if (!credentials) {
+  else if (!ra.assessorCredentials && !credentials) {
     note('repairabilityAssessment.assessorCredentials: inspector has no certifications on file');
   }
 
@@ -408,7 +432,12 @@ export function buildReportData(
   const tr = inspection.temporaryRepairs;
   const temporaryRepairs =
     tr && tr.performed === true
-      ? { ...tr, performed: true as const, sourceLabel: 'Tarp Invoice & Mitigation Log' }
+      ? {
+          ...tr,
+          performed: true as const,
+          beforeAfterPhotoIds: tr.beforeAfterPhotoIds ?? [],
+          sourceLabel: 'Tarp Invoice & Mitigation Log',
+        }
       : null;
 
   const pp = inspection.propertyProtectionPlan;
@@ -418,13 +447,14 @@ export function buildReportData(
           specializedRequired: true as const,
           sourceLabel: 'Property-Protection Plan',
           description: pp.whyOrdinaryTarpingInsufficient ?? '',
-          featureProtected: pp.featureProtected,
-          whyOrdinaryTarpingInsufficient: pp.whyOrdinaryTarpingInsufficient,
-          proposedEquipment: pp.proposedEquipment,
-          setupMethod: pp.setupMethod,
+          // Single-select on the app side; the report models it as a list.
+          featureProtected: pp.featureProtected ? [pp.featureProtected] : [],
+          whyOrdinaryTarpingInsufficient: pp.whyOrdinaryTarpingInsufficient ?? null,
+          proposedEquipment: pp.proposedEquipment ?? null,
+          setupMethod: pp.setupMethod ?? null,
           laborEstimate: null, // office-supplied
           rentalCost: null, // office-supplied
-          photoIds: pp.photoIds,
+          photoIds: pp.photoIds ?? [],
         }
       : null;
 
@@ -541,18 +571,21 @@ export function buildReportData(
       : null,
     repairabilityAssessment: ra
       ? {
-          questionPresented: ra.questionPresented,
-          methodology: ra.methodology,
-          materialsReviewed: ra.materialsReviewed,
-          fieldTestFindings: ra.fieldTestFindings,
-          conditionScoring: ra.conditionScoring,
-          repairAttemptRisks: ra.repairAttemptRisks,
+          questionPresented: ra.questionPresented ?? null,
+          methodology: ra.methodology ?? null,
+          materialsReviewed: ra.materialsReviewed ?? null,
+          fieldTestFindings: composeFieldTestProse(ra.fieldTestFindings),
+          conditionScoring: ra.conditionScoring ?? null,
+          repairAttemptRisks: ra.repairAttemptRisks ?? null,
           // Raw enum would print as "not_repairable" in the rendered PDF.
           determination: DETERMINATION_PROSE[ra.determination] ?? ra.determination,
-          recommendation: ra.recommendation,
-          assessorName: inspection.inspector.name,
-          assessorCredentials: credentials || null,
-          supportingPhotoIds: ra.supportingPhotoIds,
+          recommendation: ra.recommendation ?? null,
+          // Prefer the identity recorded at assessment time over the live
+          // profile: credentials can change, and the record should show what
+          // they were when the opinion was rendered.
+          assessorName: ra.assessorName || inspection.inspector.name,
+          assessorCredentials: ra.assessorCredentials || credentials || null,
+          supportingPhotoIds: ra.supportingPhotoIds ?? [],
         }
       : null,
     codeCitations: buildCodeCitations(config, impact),

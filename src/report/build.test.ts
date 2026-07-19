@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildReportData, resolveAreasImpacted, photoCaptureContext, photoArea, verdictForStatus } from './build.js';
+import { buildReportData, resolveAreasImpacted, photoCaptureContext, photoArea, verdictForStatus, composeFieldTestProse } from './build.js';
 import { sampleInspection, sampleConfig } from '../pdf/fixtures.js';
 import type { SubmittedInspection } from '../submissions/types.js';
 
@@ -30,13 +30,12 @@ describe('never fabricates conditional modules', () => {
         questionPresented: 'Can the roof be repaired?',
         methodology: 'Field repair attempt on F2.',
         materialsReviewed: 'Existing 3-tab, no match sourced.',
-        fieldTestFindings: 'Adjacent shingles fractured on lift.',
+        fieldTestFindings: { repairAttemptMade: true, adjacentShinglesFractured: true,
+          matchingMaterialSourceable: false, productDiscontinued: true, notes: null },
         conditionScoring: 'Brittle',
         repairAttemptRisks: 'Collateral breakage',
         determination: 'not_repairable',
         recommendation: 'Full replacement',
-        productDiscontinued: true,
-        matchingMaterialAvailable: false,
         supportingPhotoIds: ['p-1'],
       },
     });
@@ -51,10 +50,9 @@ describe('never fabricates conditional modules', () => {
   test('flags missing credentials rather than inventing them', () => {
     const i = inspection({
       repairabilityAssessment: {
-        questionPresented: null, methodology: null, materialsReviewed: null,
-        fieldTestFindings: null, conditionScoring: null, repairAttemptRisks: null,
-        determination: 'repairable', recommendation: null,
-        productDiscontinued: null, matchingMaterialAvailable: null, supportingPhotoIds: [],
+        questionPresented: 'Q', methodology: null, materialsReviewed: null,
+        fieldTestFindings: {}, conditionScoring: null, repairAttemptRisks: null,
+        determination: 'repairable', recommendation: null, supportingPhotoIds: [],
       },
     });
     i.inspector.certifications = [];
@@ -74,7 +72,7 @@ describe('never fabricates conditional modules', () => {
 
   test('property protection requires specializedRequired === true (ordinary tarping does not qualify)', () => {
     const base = {
-      specializedRequired: false, featureProtected: ['pool'],
+      specializedRequired: false, featureProtected: 'pool_spa',
       whyOrdinaryTarpingInsufficient: null, proposedEquipment: null, setupMethod: null, photoIds: [],
     };
     assert.equal(build(inspection({ propertyProtectionPlan: base })).propertyProtectionPlan, null);
@@ -193,8 +191,8 @@ describe('derived fields and photo mapping', () => {
 
   test('roof age without a stated basis is flagged as attackable', () => {
     const r = build(inspection({
-      propertySummary: { propertyType: 'single_family', stories: '2', roofType: 'gable',
-        roofAgeYears: 14, roofAgeBasis: null, accessibilityNotes: null },
+      propertyProfile: { propertyType: 'single_family', stories: '2', roofType: 'gable',
+        roofAgeYears: 14, roofAgeBasis: null, accessibilityNotes: null, recordedAtUtc: '2026-07-18T00:00:00Z' },
     }));
     assert.ok(r.missingInputs.some((m) => m.includes('roofAgeBasis')));
   });
@@ -257,9 +255,10 @@ describe('HTML template contract', () => {
 
   test('construction block uses the template key names', () => {
     const i = inspection({
-      constructionDescription: {
+      propertyProfile: {
         buildingType: 'Wood-framed', attachedOrDetached: 'Detached',
         roofGeometry: ['Gable', 'Hip'], deckType: 'OSB', framingConditionNotes: 'Sound',
+        recordedAtUtc: '2026-07-18T00:00:00Z',
       },
     });
     const c = build(i).restorationReport.construction;
@@ -286,10 +285,9 @@ describe('HTML template contract', () => {
   test('determination renders as prose, not the raw enum', () => {
     const i = inspection({
       repairabilityAssessment: {
-        questionPresented: null, methodology: null, materialsReviewed: null,
-        fieldTestFindings: null, conditionScoring: null, repairAttemptRisks: null,
-        determination: 'not_repairable', recommendation: null,
-        productDiscontinued: null, matchingMaterialAvailable: null, supportingPhotoIds: [],
+        questionPresented: 'Q', methodology: null, materialsReviewed: null,
+        fieldTestFindings: {}, conditionScoring: null, repairAttemptRisks: null,
+        determination: 'not_repairable', recommendation: null, supportingPhotoIds: [],
       },
     });
     const d = build(i).repairabilityAssessment?.determination ?? '';
@@ -301,7 +299,7 @@ describe('HTML template contract', () => {
     const i = inspection({
       temporaryRepairs: { performed: true, description: 'Tarp', datePerformed: '2026-05-19',
         materialsUsed: null, crewAndEquipment: null, tarpInvoiceRef: null, beforeAfterPhotoIds: [] },
-      propertyProtectionPlan: { specializedRequired: true, featureProtected: ['Pool'],
+      propertyProtectionPlan: { specializedRequired: true, featureProtected: 'pool_spa',
         whyOrdinaryTarpingInsufficient: 'Rigid shielding required', proposedEquipment: null,
         setupMethod: null, photoIds: [] },
     });
@@ -319,5 +317,54 @@ describe('HTML template contract', () => {
     assert.equal(r.propertyAddressShort, '1420 Chain Bridge Rd');
     assert.ok(r.concealedConditionProcedure.includes('change order'));
     assert.ok(r.certificationText.length > 0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Field-test findings: the app stores discrete booleans; the template prints
+// this value as text. It must become prose, and must never assert a fact that
+// was not recorded.
+// ---------------------------------------------------------------------------
+
+describe('field-test findings prose', () => {
+  test('renders a string, never an object (template would print [object Object])', () => {
+    const i = inspection({
+      repairabilityAssessment: {
+        questionPresented: 'Q',
+        fieldTestFindings: { repairAttemptMade: true, adjacentShinglesFractured: true },
+        determination: 'not_repairable', supportingPhotoIds: [],
+      },
+    });
+    const v = build(i).repairabilityAssessment?.fieldTestFindings;
+    assert.equal(typeof v, 'string');
+    assert.equal(String(v).includes('[object'), false);
+  });
+
+  test('states only what was recorded — silence is not a negative finding', () => {
+    // Nothing observed about matching material or discontinuation: the prose
+    // must not mention either. Asserting an unobserved fact is the exact
+    // failure mode this whole module exists to prevent.
+    const prose = composeFieldTestProse({ repairAttemptMade: true });
+    assert.ok(prose.includes('repair attempt was performed'));
+    assert.equal(/discontinued/i.test(prose), false);
+    assert.equal(/matching material/i.test(prose), false);
+  });
+
+  test('distinguishes false from absent', () => {
+    assert.ok(/did not fracture/i.test(composeFieldTestProse({ adjacentShinglesFractured: false })));
+    assert.ok(/fractured during/i.test(composeFieldTestProse({ adjacentShinglesFractured: true })));
+    assert.equal(composeFieldTestProse({}), '');
+  });
+
+  test('brittleness + discontinuation both surface when observed', () => {
+    const prose = composeFieldTestProse({
+      repairAttemptMade: true, adjacentShinglesFractured: true,
+      matchingMaterialSourceable: false, productDiscontinued: true,
+      notes: 'Sealant strip failed to release.',
+    });
+    assert.ok(/brittleness/i.test(prose));
+    assert.ok(/could not be sourced/i.test(prose));
+    assert.ok(/discontinued/i.test(prose));
+    assert.ok(prose.endsWith('Sealant strip failed to release.'));
   });
 });

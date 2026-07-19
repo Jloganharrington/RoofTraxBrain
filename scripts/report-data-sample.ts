@@ -16,15 +16,14 @@ rich.damageFlags = {
   roofDamageFound: true, sidingDamageFound: true,
   collateralDamageFound: true, interiorDamageFound: true,
 };
-rich.propertySummary = {
+rich.propertyProfile = {
   propertyType: 'Single-family detached', stories: '2', roofType: 'Gable',
   roofAgeYears: 14, roofAgeBasis: 'Permit record (2012 re-roof)',
   accessibilityNotes: 'Rear elevation requires 28ft ladder; no roof hatch.',
-};
-rich.constructionDescription = {
   buildingType: 'Wood-framed residential', attachedOrDetached: 'Detached',
   roofGeometry: ['Gable', 'Cross-gable'], deckType: 'OSB 7/16"',
   framingConditionNotes: 'Rafters sound; no deflection observed at ridge.',
+  recordedAtUtc: '2026-07-18T14:00:00Z',
 };
 rich.sidingFacets = [
   { id: 'sf-1', label: 'S1', damaged: true, damageType: 'hail', componentCount: 2 },
@@ -38,26 +37,30 @@ rich.repairabilityAssessment = {
   questionPresented: 'Can a code-compliant, reasonably uniform repair be achieved by partial replacement?',
   methodology: 'Attempted controlled repair on facet F2; sourced matching material through two suppliers.',
   materialsReviewed: 'Existing architectural laminate; discontinued line, no ASTM-equivalent match located.',
-  fieldTestFindings: 'Adjacent shingles fractured on lift at 3 of 4 attempts; sealant strip failed to release cleanly.',
+  fieldTestFindings: {
+    repairAttemptMade: true, adjacentShinglesFractured: true,
+    matchingMaterialSourceable: false, productDiscontinued: true,
+    notes: 'Sealant strip failed to release cleanly at 3 of 4 attempts.',
+  },
   conditionScoring: 'Brittle — thermal cracking on flex',
   repairAttemptRisks: 'Collateral breakage to undamaged courses; compromised water-shedding at tie-in.',
   determination: 'not_repairable',
   recommendation: 'Full replacement of affected slopes to achieve uniform, code-compliant result.',
-  productDiscontinued: true, matchingMaterialAvailable: false,
   supportingPhotoIds: rich.photos.slice(0, 2).map((p) => p.id),
+  recordedAtUtc: '2026-07-18T15:00:00Z',
 };
 rich.temporaryRepairs = {
   performed: true, description: 'Emergency tarp installed over rear slope penetration.',
   datePerformed: '2026-05-19', materialsUsed: '20x30 poly tarp, furring strips',
   crewAndEquipment: '2-person crew, 28ft ladder', tarpInvoiceRef: 'INV-2026-0519-01',
-  beforeAfterPhotoIds: [],
+  beforeAfterPhotoIds: [], recordedAtUtc: '2026-05-19T10:00:00Z',
 };
 rich.propertyProtectionPlan = {
-  specializedRequired: true, featureProtected: ['In-ground pool', 'Roof-mounted solar array'],
+  specializedRequired: true, featureProtected: 'solar_panels',
   whyOrdinaryTarpingInsufficient:
     'Solar array requires licensed de-energize/remove-reset; pool requires rigid debris shielding, not sheeting.',
   proposedEquipment: 'Scaffold shielding, rigid pool cover', setupMethod: 'Perimeter scaffold with debris netting',
-  photoIds: [],
+  photoIds: [], recordedAtUtc: '2026-07-18T15:30:00Z',
 };
 rich.inspector.certifications = [
   { name: 'HAAG Certified Inspector — Residential Roofs', issuingBody: 'HAAG Engineering', number: 'HCI-20417', expiresOn: '2028-03-31' },

@@ -173,7 +173,7 @@
     "questionPresented": "Can a code-compliant, reasonably uniform repair be achieved by partial replacement?",
     "methodology": "Attempted controlled repair on facet F2; sourced matching material through two suppliers.",
     "materialsReviewed": "Existing architectural laminate; discontinued line, no ASTM-equivalent match located.",
-    "fieldTestFindings": "Adjacent shingles fractured on lift at 3 of 4 attempts; sealant strip failed to release cleanly.",
+    "fieldTestFindings": "A repair attempt was performed on site. Adjacent shingles fractured during the attempt, indicating brittleness. Matching material could not be sourced. The installed product is discontinued. Sealant strip failed to release cleanly at 3 of 4 attempts.",
     "conditionScoring": "Brittle — thermal cracking on flex",
     "repairAttemptRisks": "Collateral breakage to undamaged courses; compromised water-shedding at tie-in.",
     "determination": "Not repairable in place — full replacement required.",
@@ -314,6 +314,7 @@
     "crewAndEquipment": "2-person crew, 28ft ladder",
     "tarpInvoiceRef": "INV-2026-0519-01",
     "beforeAfterPhotoIds": [],
+    "recordedAtUtc": "2026-05-19T10:00:00Z",
     "sourceLabel": "Tarp Invoice & Mitigation Log"
   },
   "propertyProtectionPlan": {
@@ -321,8 +322,7 @@
     "sourceLabel": "Property-Protection Plan",
     "description": "Solar array requires licensed de-energize/remove-reset; pool requires rigid debris shielding, not sheeting.",
     "featureProtected": [
-      "In-ground pool",
-      "Roof-mounted solar array"
+      "solar_panels"
     ],
     "whyOrdinaryTarpingInsufficient": "Solar array requires licensed de-energize/remove-reset; pool requires rigid debris shielding, not sheeting.",
     "proposedEquipment": "Scaffold shielding, rigid pool cover",

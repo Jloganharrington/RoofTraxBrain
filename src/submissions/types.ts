@@ -125,23 +125,24 @@ export interface SubmittedInspection {
     longitude: number | null;
   } | null;
 
-  // ---- REPORT_DATA v2 §3.1 — property + construction description --------------
-  propertySummary?: {
-    propertyType: string | null;
-    stories: string | null;
-    roofType: string | null;
-    roofAgeYears: number | null;
+  // ---- REPORT_DATA v2 — Property Profile --------------------------------------
+  // ONE block on the app side (it is one capture screen). Field-captured,
+  // non-derived values only: roofSlopeCount, roofCovering, interiorAreasInspected
+  // and flashingsAndPenetrations are derived here from data we already hold.
+  propertyProfile?: {
+    propertyType?: string | null;
+    stories?: string | null;
+    roofType?: string | null;
+    roofAgeYears?: number | null;
     // How roof age was established — an unsourced age is attackable.
-    roofAgeBasis: string | null;
-    accessibilityNotes: string | null;
-  } | null;
-
-  constructionDescription?: {
-    buildingType: string | null;
-    attachedOrDetached: string | null;
-    roofGeometry: string[];
-    deckType: string | null;
-    framingConditionNotes: string | null;
+    roofAgeBasis?: string | null;
+    accessibilityNotes?: string | null;
+    buildingType?: string | null;
+    attachedOrDetached?: string | null;
+    roofGeometry?: string[];
+    deckType?: string | null;
+    framingConditionNotes?: string | null;
+    recordedAtUtc?: string;
   } | null;
 
   // Pre-existing / non-storm conditions the inspector explicitly excludes.
@@ -155,17 +156,30 @@ export interface SubmittedInspection {
   // ---- REPORT_DATA v2 §3.1 — conditional modules ------------------------------
   // Presence (non-null) is the render trigger. NEVER fabricate a default.
   repairabilityAssessment?: {
-    questionPresented: string | null;
-    methodology: string | null;
-    materialsReviewed: string | null;
-    fieldTestFindings: string | null;
-    conditionScoring: string | null;
-    repairAttemptRisks: string | null;
+    questionPresented: string;
+    methodology?: string | null;
+    materialsReviewed?: string | null;
+    // Structured, not free text: the app captures the discrete field-test facts
+    // so the report cannot assert brittleness or discontinuation that was never
+    // observed. Composed into prose for rendering — see report/build.ts.
+    fieldTestFindings: {
+      repairAttemptMade?: boolean | null;
+      adjacentShinglesFractured?: boolean | null; // brittleness result
+      matchingMaterialSourceable?: boolean | null;
+      productDiscontinued?: boolean | null;
+      notes?: string | null;
+    };
+    conditionScoring?: string | null;
+    repairAttemptRisks?: string | null;
     determination: 'repairable' | 'not_repairable';
-    recommendation: string | null;
-    productDiscontinued: boolean | null;
-    matchingMaterialAvailable: boolean | null;
-    supportingPhotoIds: string[];
+    recommendation?: string | null;
+    // Server-populated from the inspector profile AT SAVE TIME. Preferred over
+    // the live profile so the record shows the credentials as they stood when
+    // the assessment was rendered.
+    assessorName?: string | null;
+    assessorCredentials?: string | null;
+    supportingPhotoIds?: string[];
+    recordedAtUtc?: string;
   } | null;
 
   temporaryRepairs?: {
@@ -175,18 +189,21 @@ export interface SubmittedInspection {
     materialsUsed: string | null;
     crewAndEquipment: string | null;
     tarpInvoiceRef: string | null;
-    beforeAfterPhotoIds: string[];
+    beforeAfterPhotoIds?: string[];
+    recordedAtUtc?: string;
   } | null;
 
   propertyProtectionPlan?: {
     // Explicit flag for scaffold/specialized cases — never inferred from
     // "some protection exists". Ordinary tarping does not qualify.
     specializedRequired: boolean;
-    featureProtected: string[];
-    whyOrdinaryTarpingInsufficient: string | null;
-    proposedEquipment: string | null;
-    setupMethod: string | null;
-    photoIds: string[];
+    // Single-select on the app side, not a list.
+    featureProtected?: string | null;
+    whyOrdinaryTarpingInsufficient?: string | null;
+    proposedEquipment?: string | null;
+    setupMethod?: string | null;
+    photoIds?: string[];
+    recordedAtUtc?: string;
   } | null;
 
   // Siding facets (protocol v2.1). No area/pitch/material — quantities come from

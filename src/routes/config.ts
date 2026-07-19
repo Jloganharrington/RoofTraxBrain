@@ -9,7 +9,7 @@
 import { Router } from 'express';
 import { eq, and, desc, asc } from 'drizzle-orm';
 import { db } from '../db/client.js';
-import { companyPriceBooksTable, companyServiceAreasTable } from '../db/schema.js';
+import { companyPriceBooksTable, companyServiceAreasTable, stateConfigTable } from '../db/schema.js';
 import { requireAdminOrMachine } from '../auth/session.js';
 import {
   listOfferableStates,
@@ -182,4 +182,58 @@ configRouter.get('/companies/:companyId/price-book/history', requireAdminOrMachi
     .where(eq(companyPriceBooksTable.companyId, req.params.companyId as string))
     .orderBy(asc(companyPriceBooksTable.version));
   res.json({ versions: rows });
+});
+
+// Enable a state for package rendering. This is the STATE ENABLEMENT stamp:
+// its pack has been prepared and checked, so packages may render for it.
+//
+// An endpoint rather than a seed step because the seed only auto-runs on an
+// EMPTY database, and running it by hand hits whichever database the shell is
+// pointed at — which is how the stamp kept missing production. Enabling a state
+// is also an ongoing operation, not a one-off: every new state needs it.
+configRouter.post('/config/states/:stateCode/enable', requireAdminOrMachine, async (req, res) => {
+  const stateCode = (req.params.stateCode as string).toUpperCase();
+
+  const [existing] = await db
+    .select({ reviewedAt: stateConfigTable.reviewedAt })
+    .from(stateConfigTable)
+    .where(eq(stateConfigTable.stateCode, stateCode))
+    .limit(1);
+
+  if (!existing) {
+    // Fail closed: enabling a state whose pack was never seeded would render
+    // packages with no code library, rights page, or disclaimer.
+    res.status(404).json({
+      error: 'unknown_state',
+      detail: `No state pack for ${stateCode}. Seed the pack before enabling it.`,
+    });
+    return;
+  }
+
+  if (existing.reviewedAt) {
+    res.status(200).json({ stateCode, enabled: true, enabledAt: existing.reviewedAt, alreadyEnabled: true });
+    return;
+  }
+
+  const enabledAt = new Date();
+  await db
+    .update(stateConfigTable)
+    .set({ reviewedAt: enabledAt, updatedAt: enabledAt })
+    .where(eq(stateConfigTable.stateCode, stateCode));
+
+  res.status(200).json({ stateCode, enabled: true, enabledAt, alreadyEnabled: false });
+});
+
+// Current enablement status for every seeded state.
+configRouter.get('/config/states/status', requireAdminOrMachine, async (_req, res) => {
+  const rows = await db
+    .select({ stateCode: stateConfigTable.stateCode, reviewedAt: stateConfigTable.reviewedAt })
+    .from(stateConfigTable);
+  res.json({
+    states: rows.map((r) => ({
+      stateCode: r.stateCode,
+      enabled: r.reviewedAt != null,
+      enabledAt: r.reviewedAt,
+    })),
+  });
 });

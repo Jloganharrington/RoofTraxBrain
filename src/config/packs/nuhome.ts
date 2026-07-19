@@ -7,8 +7,14 @@ import type { CompanyPack } from '../../tenancy/types.js';
 //
 // NOTE: pricePerSquare and license numbers are placeholders to be confirmed by
 // the tenant before go-live. They are configuration, not code.
+//
+// ID matches RoofTraxMobile's existing companies.id for this dev/test tenant
+// ("RFTRAX") so the courier's payload validates without a mapping layer. This
+// is a placeholder scaffold, not the real NuHome onboarding — when NuHome is
+// onboarded as a paying customer through the real flow, it gets its own
+// company row and this placeholder can be retired.
 
-export const NUHOME_COMPANY_ID = 'nuhome-exteriors';
+export const NUHOME_COMPANY_ID = 'RFTRAX';
 
 export const nuHomeCompanyPack: CompanyPack = {
   legalName: 'NuHome Exteriors LLC',

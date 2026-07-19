@@ -14,8 +14,14 @@ const MARGIN_BOTTOM = 64; // room for the footer
 // StandardFonts encode WinAnsi and THROW on unencodable characters. Map the
 // common typographic unicode we use to ASCII, then strip anything else. (Same
 // class of bug the CRM hit — bulletproof it here.)
-export function sanitize(input: string): string {
-  return input
+export function sanitize(input: string | null | undefined): string {
+  // Every exhibit's text — cells, headings, key-values — funnels through here
+  // before drawText. Fixtures never had null fields; real submissions do, so a
+  // single null cell used to take the whole package down with an opaque 500.
+  // Coalescing nullish to '' at this one chokepoint bulletproofs all 13
+  // exhibits against it at once.
+  if (input == null) return '';
+  return String(input)
     .replace(/[‘’‚′]/g, "'")
     .replace(/[“”„″]/g, '"')
     .replace(/[–—]/g, '-')

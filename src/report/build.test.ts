@@ -315,6 +315,18 @@ describe('HTML template contract', () => {
     assert.ok((r.propertyProtectionPlan?.description ?? '').length > 0);
   });
 
+  test('claimNumber is null when absent, so the template can omit the row', () => {
+    const i = inspection();
+    i.property = { ...i.property, claimNumber: null };
+    assert.equal(build(i).claimNumber, null);
+    // An empty string is also treated as absent — it would render as a blank row.
+    const j = inspection();
+    j.property = { ...j.property, claimNumber: '' };
+    assert.equal(build(j).claimNumber, null);
+    // A real number still comes through.
+    assert.equal(build(inspection()).claimNumber, 'CLM-2026-0417');
+  });
+
   test('flat cover fields the template binds are all present', () => {
     const r = build(inspection(), { office: { adjusterName: 'A. Adjuster', dateFiled: '2026-05-20' } });
     assert.equal(r.customerName, 'Jordan & Alex Reyes');

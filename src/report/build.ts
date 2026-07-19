@@ -774,7 +774,7 @@ export function buildReportData(
     propertyAddressShort: address.split(',')[0] ?? address,
     customerName: property.insuredName ?? '',
     carrier: property.carrier ?? '',
-    claimNumber: property.claimNumber ?? '',
+    claimNumber: property.claimNumber || null,
     policyNumber: property.policyNumber ?? '',
     adjusterName: office.adjusterName ?? '',
     lossDate: property.dateOfLoss ?? '',

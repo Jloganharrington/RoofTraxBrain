@@ -235,7 +235,10 @@ export interface ReportDataV2 {
   propertyAddressShort: string;
   customerName: string;
   carrier: string;
-  claimNumber: string;
+  // Frequently unavailable — a claim is often worked before the carrier issues
+  // a number. Null (not '') so the template can OMIT the row entirely rather
+  // than printing "Claim Number: —" on a carrier-facing document.
+  claimNumber: string | null;
   policyNumber: string;
   adjusterName: string;
   lossDate: string;

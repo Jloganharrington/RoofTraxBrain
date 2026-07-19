@@ -73,7 +73,19 @@ packagesRouter.post('/submissions/:id/package', requireAdminOrMachine, async (re
     return;
   }
   if (!env.GEMINI_API_KEY) {
-    res.status(503).json({ error: 'gemini_not_configured', detail: 'Set GEMINI_API_KEY to enable AI exhibit generation.' });
+    // Name the INTENDED source first. The internal env field is GEMINI_API_KEY,
+    // but it resolves from Replit's managed integration
+    // (AI_INTEGRATIONS_GEMINI_API_KEY) before falling back to a personal key —
+    // so telling the operator to "set GEMINI_API_KEY" pointed at the fallback
+    // and hid the real problem: the integration is not reaching the deployment.
+    res.status(503).json({
+      error: 'gemini_not_configured',
+      detail:
+        'No Gemini credential resolved. Expected the Replit managed integration ' +
+        '(AI_INTEGRATIONS_GEMINI_API_KEY + AI_INTEGRATIONS_GEMINI_BASE_URL) to be present ' +
+        'in this deployment; a personal GEMINI_API_KEY is only a fallback.',
+      checked: ['AI_INTEGRATIONS_GEMINI_API_KEY', 'GEMINI_API_KEY'],
+    });
     return;
   }
 

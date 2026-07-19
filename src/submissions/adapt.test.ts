@@ -94,6 +94,15 @@ describe('wire → contract adaptation', () => {
     assert.equal(inspection.components[0].note, 'missing at eave');
   });
 
+  test('property: carrierName→carrier', () => {
+    const { inspection } = adaptSubmittedInspection({
+      property: { address: '1 Test St', carrierName: 'USAA', claimNumber: 'CLM-1' },
+    });
+    assert.equal(inspection.property.carrier, 'USAA');
+    // Fields that already match must survive untouched.
+    assert.equal(inspection.property.claimNumber, 'CLM-1');
+  });
+
   test('an empty payload adapts without throwing', () => {
     const { inspection } = adaptSubmittedInspection({});
     for (const k of ['slopes','damageInstances','components','penetrations','products','testSquares','measurements','sidingFacets','interiorObservations','elevations']) {

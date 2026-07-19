@@ -119,6 +119,16 @@ export function adaptSubmittedInspection(raw: Row): AdaptResult {
           : arr(f.components).length,
   }));
 
+  // ---- property: carrierName→carrier ----
+  // The rest of the block (insuredName/claimNumber/policyNumber/dateOfLoss)
+  // already matches; only the carrier is renamed app-side.
+  if (raw.property) {
+    out.property = {
+      ...raw.property,
+      carrier: raw.property.carrier ?? raw.property.carrierName ?? null,
+    };
+  }
+
   // ---- interiorObservations / elevations: names already match ----
   out.interiorObservations = arr(raw.interiorObservations);
   out.elevations = arr(raw.elevations);

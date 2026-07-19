@@ -20,6 +20,7 @@ import type { ResolvedConfig } from '../tenancy/types.js';
 import type { ScopeResult } from '../scope/types.js';
 import type { ForensicNarratives } from '../ai/types.js';
 import { PROTOCOL_STEPS, STEP_BY_KEY, type DamageFlagKey } from '../protocol/steps.js';
+import { adaptSubmittedInspection } from '../submissions/adapt.js';
 import type { SubmissionManifestV1 } from '../submissions/types.js';
 import type {
   ReportDataV2,
@@ -253,7 +254,7 @@ function buildObservedDamage(
       if (!d.slopeId) continue;
       out.roof.push({
         location: slopeLabel.get(d.slopeId) ?? d.slopeId,
-        condition: [d.damageType, ...d.observedIndicators].filter(Boolean).join(', '),
+        condition: [d.damageType, ...(d.observedIndicators ?? [])].filter(Boolean).join(', '),
         note: d.causationNote,
       });
     }
@@ -620,13 +621,22 @@ export function buildReportData(
   const missing: string[] = [];
   const note = (what: string) => missing.push(what);
 
-  // Coerce absent collections to [] before anything reads them, and record
-  // which were missing so a courier gap surfaces as data rather than a 500.
+  // Reconcile the app's wire shape to the contract (renames + derivations),
+  // then coerce absent collections to []. Both report what they could not
+  // resolve, so a gap surfaces as data rather than a 500.
+  // Order matters: normalise SHAPE first so a genuinely absent (or wrong-typed)
+  // collection is still reported, then adapt FIELD NAMES on arrays that are now
+  // guaranteed to exist. Adapting first would coerce everything to [] and
+  // silently swallow the very gaps we want surfaced.
   const { inspection: normalised, absent } = normaliseInspection(rawInspection);
-  const inspection = normalised;
   for (const key of absent) {
     note(`payload.${key}: absent from the submission — treated as empty`);
   }
+  const adapted = adaptSubmittedInspection(normalised as never);
+  for (const field of adapted.unmapped) {
+    note(`contract.${field}: no source field in the app payload`);
+  }
+  const inspection = adapted.inspection as unknown as SubmittedInspection;
 
   if (!inspection.inspector) {
     note('payload.inspector: absent from the submission — the report cannot name who inspected');

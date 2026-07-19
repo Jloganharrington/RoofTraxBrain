@@ -30,18 +30,20 @@ submissionsRouter.post('/submissions', requireMachineToken, async (req, res) => 
     res.status(409).json({ error: 'unknown_state', stateCode: inspection.stateCode });
     return;
   }
-  if (!stateConfig.reviewedAt) {
-    // A state is not go-live until its pack (code library / rights / disclaimer)
-    // has been counsel-reviewed. Accept the submission but flag it.
-    res.status(202).json({
-      warning: 'state_not_reviewed',
-      detail: `State ${inspection.stateCode} config has not been counsel-reviewed; package generation is blocked until review.`,
-    });
-    return;
-  }
-
+  // A state's PACKAGE (the rendered legal document, citing its homeowner-rights/
+  // UPPA content) is not go-live until counsel review — that gate lives at
+  // POST /package and stays absolute. Storing the field-captured submission
+  // itself carries no legal claim and must never be blocked on the same check:
+  // this used to short-circuit here with a 2xx "warning" response and skip
+  // receiveSubmission() entirely, so the courier reported successful delivery
+  // while the data was silently discarded. Always persist; just tell the
+  // caller whether package generation is currently available.
   const { id } = await receiveSubmission(parsed.value);
-  res.status(201).json({ id, status: 'received' });
+  res.status(201).json({
+    id,
+    status: 'received',
+    packageBlockedReason: stateConfig.reviewedAt ? null : 'state_not_reviewed',
+  });
 });
 
 // Status / receipt — the app polls this after submitting.

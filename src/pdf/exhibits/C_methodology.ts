@@ -1,4 +1,5 @@
 import type { ExhibitGenerator } from '../exhibit.js';
+import { resolveInspector } from '../../report/build.js';
 
 // Exhibit C — Inspection Methodology (company template + the inspection's own
 // auto-logged capture record). Proves *how* the inspection was performed.
@@ -14,7 +15,7 @@ export const exhibitC: ExhibitGenerator = {
     doc.eyebrow('Conditions of Inspection');
     doc.keyValues([
       ['Inspected', insp?.inspectedAt ?? '-'],
-      ['Inspector', inspection.inspector.name],
+      ['Inspector', resolveInspector(inspection.inspector).name],
       ['On-site conditions', insp?.conditions ?? '-'],
       ['Equipment', (insp?.equipment ?? m.equipmentBaseline).join(', ')],
     ]);

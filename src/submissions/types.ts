@@ -87,11 +87,17 @@ export interface SubmittedInspection {
     episodeNarrative?: string | null;
   } | null;
   inspector: {
-    name: string;
-    licenseNumber: string | null;
-    signatureUrl: string | null;
-    signatureSha256: string | null;
-    signedAt: string | null;
+    // The courier joins first+last and sends null when the profile has neither.
+    name: string | null;
+    userId?: string | null;
+    email?: string | null;
+    licenseNumber?: string | null;
+    // The courier nests the signature; older submissions carry the three flat
+    // fields. Both are accepted — see resolveInspector() in report/build.ts.
+    signatureOnFile?: { url: string; sha256: string; signedAt: string | null } | null;
+    signatureUrl?: string | null;
+    signatureSha256?: string | null;
+    signedAt?: string | null;
     // Individual credentials. A forensic opinion's weight attaches to the person
     // who rendered it, not the company (company-level creds live in the company
     // pack). Feeds `repairabilityAssessment.assessorCredentials`.

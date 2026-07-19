@@ -94,7 +94,7 @@ export function resolveAreasImpacted(inspection: SubmittedInspection): {
       siding: (inspection.sidingFacets ?? []).length > 0,
       interior: inspection.interiorObservations.length > 0,
       collateral: inspection.photos.some(
-        (p) => p.stage === 'collateral' || p.area === 'collateral',
+        (p) => p.stage === 'collateral' || photoArea(p) === 'collateral',
       ),
     },
   };
@@ -121,8 +121,28 @@ const PRELIMINARY_TO_CONTEXT: Record<string, CaptureContext> = {
   damage_closeup_collateral: 'collateral',
 };
 
+const CLAIM_AREAS = new Set<string>(ALL_AREAS);
+
+// The field app's courier nests the signature under `signatureOnFile` and can
+// send a null name; earlier submissions used three flat signature fields.
+// Normalise both here rather than scattering fallbacks through the builder.
+export function resolveInspector(inspector: SubmittedInspection['inspector']) {
+  return {
+    name: inspector.name?.trim() || 'Inspector on file',
+    licenseNumber: inspector.licenseNumber ?? null,
+    signatureUrl: inspector.signatureOnFile?.url ?? inspector.signatureUrl ?? null,
+    signatureSha256: inspector.signatureOnFile?.sha256 ?? inspector.signatureSha256 ?? null,
+    signedAt: inspector.signatureOnFile?.signedAt ?? inspector.signedAt ?? null,
+  };
+}
+
 export function photoArea(photo: SubmittedPhotoLike): ClaimArea | null {
-  if (photo.area) return photo.area;
+  // Trust an explicit area ONLY when it is a real claim area. The app's photo
+  // rows also carry a `zone` (eave_edge / ridge_hip) for the component gate,
+  // and a courier that maps that onto `area` would otherwise put a value here
+  // that matches no area — silently filtering the photo out of the log and
+  // dropping evidence from the package. Fall through to derivation instead.
+  if (photo.area && CLAIM_AREAS.has(photo.area)) return photo.area;
   if (photo.subjectType === 'siding_facet' || photo.stage === 'siding') return 'siding';
   if (photo.subjectType === 'interior' || photo.stage === 'interior') return 'interior';
   if (photo.stage === 'collateral') return 'collateral';
@@ -139,7 +159,7 @@ export function photoArea(photo: SubmittedPhotoLike): ClaimArea | null {
 
 export function photoCaptureContext(photo: SubmittedPhotoLike): CaptureContext | null {
   if (photo.subjectType === 'measurement') return 'measurement';
-  if (photo.stage === 'collateral' || photo.area === 'collateral') return 'collateral';
+  if (photo.stage === 'collateral' || photoArea(photo) === 'collateral') return 'collateral';
   if (photo.triadRole) return TRIAD_TO_CONTEXT[photo.triadRole] ?? null;
   if (photo.preliminaryRole) return PRELIMINARY_TO_CONTEXT[photo.preliminaryRole] ?? null;
   return null;
@@ -189,7 +209,7 @@ function buildObservedDamage(
   }
   if (impact.collateral) {
     for (const p of inspection.photos) {
-      if (p.stage !== 'collateral' && p.area !== 'collateral') continue;
+      if (p.stage !== 'collateral' && photoArea(p) !== 'collateral') continue;
       out.collateral.push({
         location: p.caption ?? 'Collateral item',
         condition: 'Documented',
@@ -283,7 +303,7 @@ function buildComponents(
   const collateral: ScopeCategory[] = [];
   if (impact.collateral) {
     const items = inspection.photos
-      .filter((p) => p.stage === 'collateral' || p.area === 'collateral')
+      .filter((p) => p.stage === 'collateral' || photoArea(p) === 'collateral')
       .map((p) => ({
         component: p.caption ?? 'Collateral item',
         condition: 'Documented',
@@ -459,6 +479,8 @@ function buildMethodology(
   const legacy = inspection.methodology;
   const m = config.company.methodologyTemplate;
 
+  const who = resolveInspector(inspection.inspector);
+  const whoM = resolveInspector(inspection.inspector);
   const credentials = (inspection.inspector.certifications ?? [])
     .map((c) => (c.issuingBody ? `${c.name} (${c.issuingBody})` : c.name))
     .join('; ');
@@ -487,9 +509,9 @@ function buildMethodology(
           }
         : null,
     inspector: {
-      name: inspection.inspector.name,
+      name: whoM.name,
       credentials: credentials || null,
-      licenseNumber: inspection.inspector.licenseNumber,
+      licenseNumber: whoM.licenseNumber,
     },
     equipment: legacy?.equipment?.length ? legacy.equipment : m.equipmentBaseline,
     standards: {
@@ -579,6 +601,7 @@ export function buildReportData(
   }
 
   const ra = inspection.repairabilityAssessment ?? null;
+  const who = resolveInspector(inspection.inspector);
   const credentials = (inspection.inspector.certifications ?? [])
     .map((c) => (c.issuingBody ? `${c.name} (${c.issuingBody})` : c.name))
     .join('; ');
@@ -660,7 +683,7 @@ export function buildReportData(
     adjusterName: office.adjusterName ?? '',
     lossDate: inspection.property.dateOfLoss ?? '',
     dateFiled: office.dateFiled ?? '',
-    inspectorName: inspection.inspector.name,
+    inspectorName: who.name,
     inspectorTitle: credentials || 'Field Inspector',
     reportId: office.reportId ?? inspection.id,
     purposeNote:
@@ -754,7 +777,7 @@ export function buildReportData(
           // Prefer the identity recorded at assessment time over the live
           // profile: credentials can change, and the record should show what
           // they were when the opinion was rendered.
-          assessorName: ra.assessorName || inspection.inspector.name,
+          assessorName: ra.assessorName || who.name,
           assessorCredentials: ra.assessorCredentials || credentials || null,
           supportingPhotoIds: ra.supportingPhotoIds ?? [],
         }

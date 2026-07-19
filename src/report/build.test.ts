@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildReportData, resolveAreasImpacted, photoCaptureContext, photoArea, verdictForStatus, composeFieldTestProse } from './build.js';
+import { buildReportData, resolveAreasImpacted, photoCaptureContext, photoArea, verdictForStatus, composeFieldTestProse, resolveInspector } from './build.js';
 import { sampleInspection, sampleConfig } from '../pdf/fixtures.js';
 import type { SubmittedInspection } from '../submissions/types.js';
 
@@ -488,5 +488,58 @@ describe('methodology & protocol', () => {
     const byItem = Object.fromEntries(m.captureRecord.map((r) => [r.item, r.recorded]));
     assert.equal(byItem['Roof facets documented'], sampleInspection.slopes.length);
     assert.equal(byItem['Total evidence photographs'], sampleInspection.photos.length);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Courier robustness — the field app's payload is the source of truth, but it
+// must never be able to silently drop evidence.
+// ---------------------------------------------------------------------------
+
+describe('courier payload robustness', () => {
+  const photo = (over: Record<string, unknown>) =>
+    ({ id: 'x', stage: 'components', subjectType: 'component', subjectId: null, url: '', sha256: '',
+       triadRole: 'wide', capturedAtUtc: null, gpsLat: null, gpsLng: null, caption: null, ...over }) as never;
+
+  test('a component ZONE in the area field does not swallow the photo', () => {
+    // The app's photo rows carry zone = eave_edge | ridge_hip for the component
+    // gate. A courier mapping that onto `area` would otherwise produce an area
+    // matching no claim area — filtering the photo out of the log entirely.
+    assert.equal(photoArea(photo({ area: 'eave_edge' })), 'roof');
+    assert.equal(photoArea(photo({ area: 'ridge_hip' })), 'roof');
+    // A genuine claim area is still honoured.
+    assert.equal(photoArea(photo({ area: 'siding' })), 'siding');
+  });
+
+  test('component photos survive into the photo log', () => {
+    const i = inspection({
+      damageFlags: { roofDamageFound: true, sidingDamageFound: false,
+        collateralDamageFound: false, interiorDamageFound: false },
+    });
+    i.photos = [photo({ id: 'comp-1', area: 'eave_edge' }), photo({ id: 'comp-2', area: 'ridge_hip' })];
+    const r = build(i);
+    assert.equal(r.photos.length, 2, 'component photos must not be dropped');
+    assert.deepEqual(r.photos.map((p) => p.area), ['roof', 'roof']);
+  });
+
+  test('inspector: nested signatureOnFile and flat fields both resolve', () => {
+    const nested = resolveInspector({
+      name: 'Sam Whitfield', certifications: [],
+      signatureOnFile: { url: 'u', sha256: 'h', signedAt: '2026-05-20T00:00:00Z' },
+    } as never);
+    assert.equal(nested.signatureUrl, 'u');
+    assert.equal(nested.signatureSha256, 'h');
+
+    const flat = resolveInspector({
+      name: 'Sam Whitfield', signatureUrl: 'u2', signatureSha256: 'h2', signedAt: null,
+    } as never);
+    assert.equal(flat.signatureUrl, 'u2');
+  });
+
+  test('a null inspector name never reaches the document', () => {
+    // The courier joins first+last and sends null when the profile has neither.
+    const r = resolveInspector({ name: null } as never);
+    assert.equal(r.name, 'Inspector on file');
+    assert.equal(typeof r.name, 'string');
   });
 });

@@ -1,4 +1,5 @@
 import type { ExhibitGenerator } from '../exhibit.js';
+import { resolveInspector } from '../../report/build.js';
 
 // Exhibit M — Signed Repairability Conclusion.
 // The final exhibit. AI-composed conclusion narrative + the inspector's on-file
@@ -39,8 +40,8 @@ export const exhibitM: ExhibitGenerator = {
     if (signatureImage) {
       // Render the embedded signature image
       doc.signatureBlock(signatureImage, {
-        name: inspector.name,
-        license: inspector.licenseNumber,
+        name: resolveInspector(inspector).name,
+        license: resolveInspector(inspector).licenseNumber,
         signedAt,
       });
     } else {

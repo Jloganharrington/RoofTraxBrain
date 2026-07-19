@@ -1,4 +1,5 @@
 import type { PdfDoc } from './doc.js';
+import { resolveInspector } from '../report/build.js';
 import type { SubmittedInspection } from '../submissions/types.js';
 import type { ResolvedConfig } from '../tenancy/types.js';
 
@@ -35,7 +36,7 @@ export function renderSummary(
     ['Policy #', p.policyNumber ?? '-'],
     ['Claim #', p.claimNumber ?? '-'],
     ['Date of loss', p.dateOfLoss ?? '-'],
-    ['Inspector', inspection.inspector.name],
+    ['Inspector', resolveInspector(inspection.inspector).name],
     ['Jurisdiction', `${config.state.stateName} (${config.stateCode})`],
   ]);
 

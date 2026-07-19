@@ -15,7 +15,7 @@ export function machineTokenValid(req: Request): boolean {
 }
 
 export function requireMachineToken(req: Request, res: Response, next: NextFunction): void {
-  if (machineTokenValid(req)) {
+  if (env.AUTH_DISABLED || machineTokenValid(req)) {
     next();
     return;
   }

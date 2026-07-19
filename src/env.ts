@@ -33,6 +33,8 @@ export const env = {
   // Auth — two realms: machine bearer token (app→Brain API) and single admin
   // session (UI). Optional in development so offline scripts/tests still run;
   // production boot fails closed below if any is missing.
+  // Set AUTH_DISABLED=true to bypass all auth guards (testing only — never in production).
+  AUTH_DISABLED: optional('AUTH_DISABLED') === 'true',
   BRAIN_API_TOKEN: optional('BRAIN_API_TOKEN'),
   ADMIN_USERNAME: optional('ADMIN_USERNAME'),
   // Either a pre-computed argon2 hash (takes precedence) or a plaintext

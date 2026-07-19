@@ -12,6 +12,7 @@ PORT = "5000"
 
 [userenv.development]
 NODE_ENV = "development"
+AUTH_DISABLED = "true"
 
 [userenv.production]
 NODE_ENV = "production"

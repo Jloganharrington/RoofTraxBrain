@@ -49,7 +49,7 @@ export function adminSessionValid(req: Request): boolean {
 
 // UI/settings guard. API-ish requests get 401 JSON; page navigations redirect to /login.
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  if (adminSessionValid(req)) {
+  if (env.AUTH_DISABLED || adminSessionValid(req)) {
     next();
     return;
   }
@@ -63,7 +63,7 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
 
 // Either realm may trigger builds / read status.
 export function requireAdminOrMachine(req: Request, res: Response, next: NextFunction): void {
-  if (adminSessionValid(req) || machineTokenValid(req)) {
+  if (env.AUTH_DISABLED || adminSessionValid(req) || machineTokenValid(req)) {
     next();
     return;
   }

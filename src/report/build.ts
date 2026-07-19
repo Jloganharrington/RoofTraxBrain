@@ -61,6 +61,62 @@ export interface BuildReportDataOptions {
   };
 }
 
+
+// ---------------------------------------------------------------------------
+// Payload normalisation
+// ---------------------------------------------------------------------------
+
+// The envelope validator deliberately checks only package identity + photos and
+// lets every other capture array through with .passthrough(). Our types declare
+// those arrays as required, so a real payload that omits one used to crash the
+// whole report with "Cannot read properties of undefined" — a 500 with no clue
+// which field was at fault.
+//
+// Normalise every collection to an array here, and REPORT which ones were
+// absent rather than silently treating missing data as empty. A missing
+// collection is a courier gap worth knowing about; an empty one is a fact.
+// Contract-required: absence means the courier dropped something it should
+// have sent, and that is worth surfacing.
+const REQUIRED_COLLECTIONS = [
+  'slopes', 'elevations', 'damageInstances', 'testSquares', 'measurements',
+  'components', 'penetrations', 'products', 'interiorObservations',
+  'attestations', 'addenda', 'photos',
+] as const;
+
+// Genuinely optional in the contract — a roof-only claim has no siding facets,
+// and most inspections exclude nothing. Absence is a fact, not a gap; coerce
+// quietly so it does not drown the real signal.
+const OPTIONAL_COLLECTIONS = ['sidingFacets', 'existingOrUnrelatedConditions'] as const;
+
+export function normaliseInspection(
+  inspection: SubmittedInspection,
+): { inspection: SubmittedInspection; absent: string[] } {
+  const absent: string[] = [];
+  const patched = { ...inspection } as Record<string, unknown>;
+
+  for (const key of REQUIRED_COLLECTIONS) {
+    const v = patched[key];
+    if (v == null) {
+      absent.push(key);
+      patched[key] = [];
+    } else if (!Array.isArray(v)) {
+      absent.push(`${key} (not an array)`);
+      patched[key] = [];
+    }
+  }
+  for (const key of OPTIONAL_COLLECTIONS) {
+    const v = patched[key];
+    if (v == null) {
+      patched[key] = [];
+    } else if (!Array.isArray(v)) {
+      // Wrong type is still worth flagging even on an optional field.
+      absent.push(`${key} (not an array)`);
+      patched[key] = [];
+    }
+  }
+  return { inspection: patched as unknown as SubmittedInspection, absent };
+}
+
 // ---------------------------------------------------------------------------
 // Area impact
 // ---------------------------------------------------------------------------
@@ -543,12 +599,20 @@ function buildMethodology(
 // ---------------------------------------------------------------------------
 
 export function buildReportData(
-  inspection: SubmittedInspection,
+  rawInspection: SubmittedInspection,
   config: ResolvedConfig,
   opts: BuildReportDataOptions = {},
 ): ReportDataV2 {
   const missing: string[] = [];
   const note = (what: string) => missing.push(what);
+
+  // Coerce absent collections to [] before anything reads them, and record
+  // which were missing so a courier gap surfaces as data rather than a 500.
+  const { inspection: normalised, absent } = normaliseInspection(rawInspection);
+  const inspection = normalised;
+  for (const key of absent) {
+    note(`payload.${key}: absent from the submission — treated as empty`);
+  }
 
   const { impact, derived } = resolveAreasImpacted(inspection);
   if (derived) note('areasImpacted: derived from records — app did not send damage flags');

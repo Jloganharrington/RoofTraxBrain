@@ -543,3 +543,53 @@ describe('courier payload robustness', () => {
     assert.equal(typeof r.name, 'string');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Real payloads are looser than our types. The envelope validator only checks
+// package identity + photos (.passthrough() on everything else), so a
+// submission can legally omit any capture array. Missing data must degrade to
+// a reportable gap, never a 500.
+// ---------------------------------------------------------------------------
+
+describe('sparse payload robustness', () => {
+  const minimal = () =>
+    ({
+      id: 'i-1', companyId: 'RFTRAX', stateCode: 'VA',
+      property: { address: '1 Test St', insuredName: null, carrier: null,
+        policyNumber: null, claimNumber: null, dateOfLoss: null },
+      storm: null,
+      inspector: { name: 'Sam', licenseNumber: null, signatureUrl: null,
+        signatureSha256: null, signedAt: null },
+      methodology: null, homeownerFacts: null, submittedAt: '2026-07-19T00:00:00Z',
+      // every collection deliberately omitted
+    }) as never;
+
+  test('a payload missing every capture array still builds', () => {
+    const r = buildReportData(minimal(), sampleConfig, { generatedAt: AT });
+    assert.equal(r.schemaVersion, 2);
+    assert.equal(r.propertyAddress, '1 Test St');
+    assert.deepEqual(r.photos, []);
+    assert.equal(r.propertySummary.roofSlopeCount, 0);
+    // The methodology section must still render its 16 steps.
+    assert.equal(r.methodology.steps.length, 16);
+  });
+
+  test('absent collections are reported, not silently swallowed', () => {
+    const r = buildReportData(minimal(), sampleConfig, { generatedAt: AT });
+    const absentNotes = r.missingInputs.filter((m) => m.startsWith('payload.'));
+    assert.ok(absentNotes.length > 0, 'expected payload.* gaps to be reported');
+    assert.ok(absentNotes.some((m) => m.includes('slopes')));
+    assert.ok(absentNotes.some((m) => m.includes('testSquares')));
+  });
+
+  test('a non-array where an array belongs is caught, not crashed on', () => {
+    const bad = { ...(minimal() as object), slopes: 'not-an-array' } as never;
+    const r = buildReportData(bad, sampleConfig, { generatedAt: AT });
+    assert.ok(r.missingInputs.some((m) => m.includes('slopes (not an array)')));
+  });
+
+  test('a complete payload reports no payload gaps', () => {
+    const r = build(inspection());
+    assert.equal(r.missingInputs.filter((m) => m.startsWith('payload.')).length, 0);
+  });
+});

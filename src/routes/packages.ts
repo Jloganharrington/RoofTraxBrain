@@ -191,7 +191,14 @@ packagesRouter.get('/submissions/:id/report-data', requireAdminOrMachine, async 
 
   let config;
   try {
-    config = await resolveConfig(sub.companyId, sub.stateCode);
+    // DATA INSPECTION path: allowed to resolve a state whose legal content has
+    // not yet been counsel-reviewed, so the team can see what a submission
+    // produced before go-live. The rendered-package path above does NOT pass
+    // this and still hard-blocks. The response is stamped below so an
+    // unreviewed payload can never be mistaken for a go-live one.
+    config = await resolveConfig(sub.companyId, sub.stateCode, {
+      allowUnreviewedState: true,
+    });
   } catch (err) {
     res.status(409).json({ error: 'state_not_go_live', detail: (err as Error).message });
     return;
@@ -211,5 +218,19 @@ packagesRouter.get('/submissions/:id/report-data', requireAdminOrMachine, async 
   // Surface incompleteness in the response envelope too, so a consumer that
   // ignores `missingInputs` still has a reason to look. A thin package must
   // never look identical to a complete one.
-  res.json({ reportData: data, complete: data.missingInputs.length === 0 });
+  const stateGoLive = config.stateReviewedAt != null;
+  res.json({
+    reportData: data,
+    complete: data.missingInputs.length === 0,
+    // Loud, structural marker: this payload is for inspection only until the
+    // state's legal content clears counsel review.
+    goLive: stateGoLive,
+    ...(stateGoLive
+      ? {}
+      : {
+          notGoLiveWarning:
+            `State ${sub.stateCode} has not been counsel-reviewed. This data is for ` +
+            'inspection only and MUST NOT be rendered or delivered as a proof package.',
+        }),
+  });
 });

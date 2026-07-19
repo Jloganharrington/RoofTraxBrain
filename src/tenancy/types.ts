@@ -90,4 +90,8 @@ export interface ResolvedConfig {
   company: CompanyPack;
   stateCode: string;
   state: StatePack;
+  // Counsel-review stamp for the state pack. Null means the state is NOT
+  // go-live: data may be inspected, but no proof package may be rendered.
+  // Consumers that surface config to a human must say so plainly.
+  stateReviewedAt?: Date | string | null;
 }

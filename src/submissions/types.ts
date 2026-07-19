@@ -17,14 +17,35 @@ export interface SubmissionManifestV1 {
   signatureOnFile: { url: string; sha256: string; signedAt: string } | null;
 }
 
+// Photo capture context for the REPORT_DATA v2 curated photo log. Maps from the
+// app's existing `triadRole` (wide|mid|close) plus two values the app adds for
+// measurement and collateral shots. Phase-1 photos carry `preliminaryRole`
+// instead of `triadRole` and map separately — see report/build.ts.
+export type CaptureContext =
+  | 'overview'
+  | 'mid-range'
+  | 'close-up'
+  | 'measurement'
+  | 'collateral';
+
+// The four claim areas. `interior` is the fourth area the report renderer gates
+// on; the app currently emits three damage flags and is adding the fourth.
+export type ClaimArea = 'roof' | 'siding' | 'interior' | 'collateral';
+
 export interface SubmittedPhoto {
   id: string;
-  stage: string; // S0..S9
+  // Protocol v2 step key (`arrival`, `elevation_access`, `facets`, `test_squares`,
+  // `siding`, ...). Legacy submissions carry the retired `S0..S9` vocabulary.
+  stage: string;
   subjectType: string; // inspection | elevation | slope | test_square | test_square_hit | damage_instance | ...
   subjectId: string | null;
   url: string;
   sha256: string;
   triadRole: 'wide' | 'mid' | 'close' | null;
+  // Phase-1 single-shot slot; mutually exclusive with triadRole.
+  preliminaryRole?: string | null;
+  // Which claim area this photo documents. Drives the area-conditional photo log.
+  area?: ClaimArea | null;
   capturedAtUtc: string | null;
   gpsLat: number | null;
   gpsLng: number | null;
@@ -71,7 +92,112 @@ export interface SubmittedInspection {
     signatureUrl: string | null;
     signatureSha256: string | null;
     signedAt: string | null;
+    // Individual credentials. A forensic opinion's weight attaches to the person
+    // who rendered it, not the company (company-level creds live in the company
+    // pack). Feeds `repairabilityAssessment.assessorCredentials`.
+    certifications?: Array<{
+      name: string;
+      issuingBody: string | null;
+      number: string | null;
+      expiresOn: string | null;
+    }>;
+    yearsExperience?: number | null;
   };
+
+  // ---- Protocol v2.1 — damage-area flags -------------------------------------
+  // The app emits three today; `interior` is being added. Absent => fall back to
+  // deriving impact from the presence of records for that area.
+  damageFlags?: {
+    roofDamageFound: boolean;
+    sidingDamageFound: boolean;
+    collateralDamageFound: boolean;
+    interiorDamageFound?: boolean;
+  } | null;
+
+  // ---- Protocol v2.1 — arrival log (data only, no photos) ---------------------
+  arrival?: {
+    timeLocal: string | null;
+    sky: string | null;
+    windCondition: string | null;
+    temp: string | null;
+    personnelPresent: string[];
+    latitude: number | null;
+    longitude: number | null;
+  } | null;
+
+  // ---- REPORT_DATA v2 §3.1 — property + construction description --------------
+  propertySummary?: {
+    propertyType: string | null;
+    stories: string | null;
+    roofType: string | null;
+    roofAgeYears: number | null;
+    // How roof age was established — an unsourced age is attackable.
+    roofAgeBasis: string | null;
+    accessibilityNotes: string | null;
+  } | null;
+
+  constructionDescription?: {
+    buildingType: string | null;
+    attachedOrDetached: string | null;
+    roofGeometry: string[];
+    deckType: string | null;
+    framingConditionNotes: string | null;
+  } | null;
+
+  // Pre-existing / non-storm conditions the inspector explicitly excludes.
+  // Documenting what is NOT storm damage is what makes the rest credible.
+  existingOrUnrelatedConditions?: Array<{
+    id: string;
+    location: string;
+    note: string;
+  }>;
+
+  // ---- REPORT_DATA v2 §3.1 — conditional modules ------------------------------
+  // Presence (non-null) is the render trigger. NEVER fabricate a default.
+  repairabilityAssessment?: {
+    questionPresented: string | null;
+    methodology: string | null;
+    materialsReviewed: string | null;
+    fieldTestFindings: string | null;
+    conditionScoring: string | null;
+    repairAttemptRisks: string | null;
+    determination: 'repairable' | 'not_repairable';
+    recommendation: string | null;
+    productDiscontinued: boolean | null;
+    matchingMaterialAvailable: boolean | null;
+    supportingPhotoIds: string[];
+  } | null;
+
+  temporaryRepairs?: {
+    performed: boolean; // must be explicitly true
+    description: string | null;
+    datePerformed: string | null;
+    materialsUsed: string | null;
+    crewAndEquipment: string | null;
+    tarpInvoiceRef: string | null;
+    beforeAfterPhotoIds: string[];
+  } | null;
+
+  propertyProtectionPlan?: {
+    // Explicit flag for scaffold/specialized cases — never inferred from
+    // "some protection exists". Ordinary tarping does not qualify.
+    specializedRequired: boolean;
+    featureProtected: string[];
+    whyOrdinaryTarpingInsufficient: string | null;
+    proposedEquipment: string | null;
+    setupMethod: string | null;
+    photoIds: string[];
+  } | null;
+
+  // Siding facets (protocol v2.1). No area/pitch/material — quantities come from
+  // the office-side measurement report.
+  sidingFacets?: Array<{
+    id: string;
+    label: string; // S1, S2, ...
+    damaged: boolean;
+    damageType: string | null; // wind | hail | tree
+    componentCount: number;
+  }>;
   methodology: {
     inspectedAt: string | null;
     conditions: string | null; // sky / wind / temp recorded on site
@@ -79,10 +205,18 @@ export interface SubmittedInspection {
   } | null;
   slopes: Array<{
     id: string;
-    label: string;
+    label: string; // F1, F2, ... (facet label)
     direction: string | null;
     pitch: string | null;
     material: string | null;
+    // Protocol v2 — per-facet area feeds squares/pricing; damageType drives the
+    // hail-gated test-square rule. Optional until every submission carries them.
+    areaSqft?: number | null;
+    damagePresent?: boolean;
+    damageType?: string | null; // hail | wind | hail_and_wind | none
+    // Tie-in protocol selections — drive fixed exhibit inclusion.
+    tieInValley?: boolean;
+    tieInHipRidge?: boolean;
   }>;
   elevations: Array<{ id: string; direction: string }>;
   damageInstances: Array<{

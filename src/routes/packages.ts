@@ -9,7 +9,9 @@ import { resolveStormOfRecord, toStormBlock } from '../weather/noaa/query.js';
 import { generateNarratives } from '../ai/generate.js';
 import { GeminiGenerationError } from '../ai/gemini.js';
 import { requireAdminOrMachine } from '../auth/session.js';
+import { buildReportData } from '../report/build.js';
 import type { SubmittedInspection } from '../submissions/types.js';
+import type { ForensicNarratives } from '../ai/types.js';
 import { env } from '../env.js';
 
 // Phase-2 authoritative upgrade: if the ingested NOAA Storm Events corpus has a
@@ -173,4 +175,38 @@ packagesRouter.get('/submissions/:id/package', requireAdminOrMachine, async (req
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="proof-package-${sub.inspectionId}.pdf"`);
   res.send(Buffer.from(bytes));
+});
+
+// REPORT_DATA v2 — the JSON contract consumed by the Phase 2 proof-package HTML
+// template. Deliberately does NOT require GEMINI_API_KEY: narratives are used if
+// they were already generated and cached, but the structural data must be
+// viewable (and the template developable) without the AI pipeline configured.
+// Only the AI-authored narrative fields go null when narratives are absent.
+packagesRouter.get('/submissions/:id/report-data', requireAdminOrMachine, async (req, res) => {
+  const sub = await getSubmission(req.params.id as string);
+  if (!sub) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+
+  let config;
+  try {
+    config = await resolveConfig(sub.companyId, sub.stateCode);
+  } catch (err) {
+    res.status(409).json({ error: 'state_not_go_live', detail: (err as Error).message });
+    return;
+  }
+  if (!config) {
+    res.status(409).json({ error: 'config_unresolved', detail: 'missing company or state pack' });
+    return;
+  }
+
+  const data = buildReportData(sub.inspection, config, {
+    ai: (sub.aiNarratives as ForensicNarratives | null) ?? null,
+  });
+
+  // Surface incompleteness in the response envelope too, so a consumer that
+  // ignores `missingInputs` still has a reason to look. A thin package must
+  // never look identical to a complete one.
+  res.json({ reportData: data, complete: data.missingInputs.length === 0 });
 });

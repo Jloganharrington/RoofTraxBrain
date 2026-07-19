@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 2,
+  "logoUrl": "",
+  "companyName": "NuHome Exteriors",
+  "coverPhotoTag": "",
+  "propertyAddress": "1420 Chain Bridge Rd, Fairfax, VA 22030",
+  "propertyAddressShort": "1420 Chain Bridge Rd",
+  "customerName": "Jordan & Alex Reyes",
+  "carrier": "USAA",
+  "claimNumber": "CLM-2026-0417",
+  "policyNumber": "USAA-88231145",
+  "adjusterName": "",
+  "lossDate": "2026-05-18",
+  "dateFiled": "",
+  "inspectorName": "Sam Whitfield",
+  "inspectorTitle": "HAAG Certified Inspector — Residential Roofs (HAAG Engineering)",
+  "reportId": "insp-sample-0001",
+  "purposeNote": "This report is a contractor scope submission documenting the physical condition of the property following the storm event referenced above. It presents observed damage, applicable building-code requirements, and repair method — it does not offer an opinion on coverage or policy interpretation.",
+  "certificationText": "I certify that the observations, measurements, and photographic evidence contained in this report were made by me or under my direct supervision, and accurately represent the condition of the property identified above on the date of inspection. This report constitutes a contractor scope submission and does not represent a coverage determination.",
+  "concealedConditionProcedure": "1. Stop affected work when practical.\n2. Photograph and measure the condition.\n3. Notify the homeowner.\n4. Notify the carrier and provide a reinspection opportunity when appropriate.\n5. Prepare a written change order.\n6. Apply the previously disclosed unit price.\n7. Obtain homeowner authorization.\n8. Preserve invoices and installation photographs.\n\nThis procedure applies with particular care to concealed sheathing conditions discovered during tear-off.",
+  "forensicSummary": "Based on the physical findings documented during the inspection on the date of loss, including storm-event verification, test-square hit counts, and measured damage indicators, the roof system requires full-slope replacement to restore code-compliant and reasonably uniform conditions. This conclusion is the contractor's professional assessment of the physical condition observed — it is not a coverage determination.",
+  "propertySummary": {
+    "propertyType": "Single-family detached",
+    "stories": "2",
+    "roofType": "Gable",
+    "roofAgeYears": 14,
+    "roofAgeBasis": "Permit record (2012 re-roof)",
+    "roofSlopeCount": 2,
+    "accessibilityNotes": "Rear elevation requires 28ft ladder; no roof hatch.",
+    "areasAffected": [
+      "roof",
+      "siding",
+      "interior",
+      "collateral"
+    ],
+    "temporaryRepairsCompleted": true,
+    "projectStatus": null
+  },
+  "areasImpacted": [
+    {
+      "key": "roof",
+      "name": "Roof",
+      "impacted": true
+    },
+    {
+      "key": "siding",
+      "name": "Siding",
+      "impacted": true
+    },
+    {
+      "key": "interior",
+      "name": "Interior",
+      "impacted": true
+    },
+    {
+      "key": "collateral",
+      "name": "Collateral",
+      "impacted": true
+    }
+  ],
+  "restorationReport": {
+    "purposeAndScope": "Storm of record confirmed: hail event on the documented date of loss Test-square counts exceed functional-damage threshold on both primary slopes Granule displacement and mat exposure documented across multiple damage instances Product identification and matching assessment per field findings Scope of work computed from field measurements at contractor incurred cost",
+    "construction": {
+      "buildingType": "Wood-framed residential",
+      "configuration": "Detached",
+      "roofCovering": "GAF",
+      "roofGeometry": "Gable, Cross-gable",
+      "deckType": "OSB 7/16\"",
+      "framingNotes": "Rafters sound; no deflection observed at ridge.",
+      "flashingsAndPenetrations": [
+        "drip_edge",
+        "decking",
+        "ventilation",
+        "plumbing_vent",
+        "chimney"
+      ],
+      "interiorAreasInspected": [
+        "Upstairs bedroom ceiling"
+      ]
+    },
+    "observedDamage": {
+      "roof": [
+        {
+          "location": "Front (South)",
+          "condition": "hail_impact, hail_hit, granule_loss, mat_exposure",
+          "note": "If not for the 5/18 hail event, this mat fracture with granule loss would not be present; the impact bruise pattern is consistent with hail, not foot traffic or manufacturing defect."
+        },
+        {
+          "location": "Back (North)",
+          "condition": "hail_impact, hail_hit, granule_loss",
+          "note": "North slope impacts corroborate a multi-directional hail event consistent with the storm of record."
+        }
+      ],
+      "siding": [
+        {
+          "location": "S1",
+          "condition": "hail",
+          "note": null
+        }
+      ],
+      "interior": [
+        {
+          "location": "Upstairs bedroom ceiling",
+          "condition": "water_stain",
+          "note": "Moisture reading: 18.5"
+        }
+      ],
+      "collateral": []
+    },
+    "existingOrUnrelatedConditions": [
+      {
+        "location": "North elevation, lower course",
+        "note": "Pre-existing mechanical damage consistent with ladder contact; excluded from this claim."
+      }
+    ],
+    "recommendedScopeNarrative": "Based on the physical findings documented during the inspection on the date of loss, including storm-event verification, test-square hit counts, and measured damage indicators, the roof system requires full-slope replacement to restore code-compliant and reasonably uniform conditions. This conclusion is the contractor's professional assessment of the physical condition observed — it is not a coverage determination."
+  },
+  "photos": [
+    {
+      "id": "ph-overview",
+      "area": null,
+      "label": "",
+      "desc": "Front of home",
+      "captureContext": null
+    },
+    {
+      "id": "ph-elev-front",
+      "area": "roof",
+      "label": "ROOF",
+      "desc": "Front elevation",
+      "captureContext": "overview"
+    },
+    {
+      "id": "ph-slope-front",
+      "area": "roof",
+      "label": "ROOF",
+      "desc": "Front slope overview",
+      "captureContext": "overview"
+    },
+    {
+      "id": "ph-dmg1-wide",
+      "area": "roof",
+      "label": "ROOF",
+      "desc": "Hail damage wide",
+      "captureContext": "overview"
+    },
+    {
+      "id": "ph-dmg1-close",
+      "area": "roof",
+      "label": "ROOF",
+      "desc": "Hail damage close (scale)",
+      "captureContext": "close-up"
+    },
+    {
+      "id": "ph-ts-front",
+      "area": "roof",
+      "label": "ROOF",
+      "desc": "Front test square",
+      "captureContext": "overview"
+    }
+  ],
+  "weatherEvidence": {
+    "stormDate": "2026-05-18",
+    "stormType": "hail",
+    "windGust": "58 mph",
+    "hailSize": "1.75 in",
+    "stormSource": "VisualCrossing",
+    "stormStation": "LWX",
+    "causationSummary": "Quarter to half-dollar size hail reported with a severe thunderstorm. (LWX)",
+    "ifNotForNote": "If not for the 5/18 hail event, this mat fracture with granule loss would not be present; the impact bruise pattern is consistent with hail, not foot traffic or manufacturing defect."
+  },
+  "repairabilityAssessment": {
+    "questionPresented": "Can a code-compliant, reasonably uniform repair be achieved by partial replacement?",
+    "methodology": "Attempted controlled repair on facet F2; sourced matching material through two suppliers.",
+    "materialsReviewed": "Existing architectural laminate; discontinued line, no ASTM-equivalent match located.",
+    "fieldTestFindings": "Adjacent shingles fractured on lift at 3 of 4 attempts; sealant strip failed to release cleanly.",
+    "conditionScoring": "Brittle — thermal cracking on flex",
+    "repairAttemptRisks": "Collateral breakage to undamaged courses; compromised water-shedding at tie-in.",
+    "determination": "Not repairable in place — full replacement required.",
+    "recommendation": "Full replacement of affected slopes to achieve uniform, code-compliant result.",
+    "assessorName": "Sam Whitfield",
+    "assessorCredentials": "HAAG Certified Inspector — Residential Roofs (HAAG Engineering)",
+    "supportingPhotoIds": [
+      "ph-overview",
+      "ph-elev-front"
+    ]
+  },
+  "codeCitations": [
+    {
+      "key": "va-irc-r908-3",
+      "area": "roof",
+      "title": "Roof replacement",
+      "cite": "IRC R908.3",
+      "body": "Roof replacement shall include the removal of existing layers of roof coverings down to the roof deck. Required where existing coverings are damaged such that repair is not permitted."
+    },
+    {
+      "key": "va-irc-r905-2-8-5",
+      "area": "roof",
+      "title": "Drip edge",
+      "cite": "IRC R905.2.8.5",
+      "body": "A drip edge shall be provided at eaves and rake edges of shingle roofs. Adjacent segments shall be lapped and the drip edge fastened per code spacing."
+    },
+    {
+      "key": "va-irc-r905-1-1",
+      "area": "roof",
+      "title": "Underlayment application",
+      "cite": "IRC R905.1.1",
+      "body": "Underlayment shall be applied in accordance with the manufacturer’s installation instructions and the code for the roof-covering type and roof slope."
+    },
+    {
+      "key": "va-irc-r905-1-2",
+      "area": null,
+      "title": "Ice barrier",
+      "cite": "IRC R905.1.2",
+      "body": "In areas where there has been a history of ice forming along the eaves, an ice barrier shall be installed for asphalt shingles. Applicability is climate/jurisdiction dependent — confirm for the property’s location."
+    },
+    {
+      "key": "va-irc-r803-decking",
+      "area": "roof",
+      "title": "Roof sheathing / decking",
+      "cite": "IRC R803",
+      "body": "Roof sheathing shall be of an approved type and thickness for the span and shall provide a sound substrate for the roof covering. Deteriorated or non-conforming decking exposed during tear-off must be replaced to receive the new covering."
+    }
+  ],
+  "components": {
+    "roof": [
+      {
+        "category": "Base Roof System",
+        "items": [
+          {
+            "component": "drip_edge",
+            "condition": "absent",
+            "method": "Visual inspection",
+            "verdict": ""
+          },
+          {
+            "component": "decking",
+            "condition": "deteriorated",
+            "method": "Visual inspection",
+            "verdict": "replace"
+          },
+          {
+            "component": "ventilation",
+            "condition": "present",
+            "method": "Visual inspection",
+            "verdict": ""
+          }
+        ]
+      },
+      {
+        "category": "Additional Roof Work",
+        "items": [
+          {
+            "component": "plumbing_vent",
+            "condition": "3 documented",
+            "method": "Visual inspection",
+            "verdict": ""
+          },
+          {
+            "component": "chimney",
+            "condition": "1 documented",
+            "method": "Visual inspection",
+            "verdict": ""
+          }
+        ]
+      }
+    ],
+    "siding": [
+      {
+        "category": "Siding & Elevations",
+        "items": [
+          {
+            "component": "S1",
+            "condition": "hail",
+            "method": "Visual inspection",
+            "verdict": "replace"
+          },
+          {
+            "component": "S2",
+            "condition": "undamaged",
+            "method": "Visual inspection",
+            "verdict": "monitor"
+          }
+        ]
+      }
+    ],
+    "interior": [
+      {
+        "category": "Interior — By Room",
+        "items": [
+          {
+            "component": "Upstairs bedroom ceiling",
+            "condition": "water_stain",
+            "method": "Visual inspection",
+            "verdict": ""
+          }
+        ]
+      }
+    ],
+    "collateral": []
+  },
+  "manufacturerSpecs": {
+    "productIdentified": true,
+    "manufacturerName": "GAF",
+    "productLine": "Timberline HDZ",
+    "publicationDate": null,
+    "relevantPages": ""
+  },
+  "temporaryRepairs": {
+    "performed": true,
+    "description": "Emergency tarp installed over rear slope penetration.",
+    "datePerformed": "2026-05-19",
+    "materialsUsed": "20x30 poly tarp, furring strips",
+    "crewAndEquipment": "2-person crew, 28ft ladder",
+    "tarpInvoiceRef": "INV-2026-0519-01",
+    "beforeAfterPhotoIds": [],
+    "sourceLabel": "Tarp Invoice & Mitigation Log"
+  },
+  "propertyProtectionPlan": {
+    "specializedRequired": true,
+    "sourceLabel": "Property-Protection Plan",
+    "description": "Solar array requires licensed de-energize/remove-reset; pool requires rigid debris shielding, not sheeting.",
+    "featureProtected": [
+      "In-ground pool",
+      "Roof-mounted solar array"
+    ],
+    "whyOrdinaryTarpingInsufficient": "Solar array requires licensed de-energize/remove-reset; pool requires rigid debris shielding, not sheeting.",
+    "proposedEquipment": "Scaffold shielding, rigid pool cover",
+    "setupMethod": "Perimeter scaffold with debris netting",
+    "laborEstimate": null,
+    "rentalCost": null,
+    "photoIds": []
+  },
+  "exhibits": {
+    "measurements": {
+      "attached": true,
+      "sourceLabel": "Measurement Report",
+      "description": "Roof areas, squares, slopes, pitch, eaves, rakes, ridges, hips, valleys, waste factor, and roof diagram."
+    },
+    "estimate": {
+      "attached": true,
+      "sourceLabel": "Contractor Estimate",
+      "description": "Detailed line items, quantities, pricing, taxes, overhead & profit, and area/category recaps."
+    },
+    "priceBook": {
+      "attached": true,
+      "sourceLabel": "NuHome Exteriors Price Book",
+      "description": "Standard roof-system rate, CDX/FRT rates, restricted-access rate, and other consistently applied unit pricing."
+    },
+    "pricingSupport": {
+      "attached": false,
+      "sourceLabel": "Supplier Quotes / Labor Build-Up",
+      "description": "Supplier quotes, material invoices, labor-cost build-up, and normalized comparable bids."
+    },
+    "constructionAgreement": {
+      "attached": true,
+      "sourceLabel": "Signed Construction Agreement",
+      "description": "Executed agreement establishing scope, pricing method, payment terms, and change-order procedure."
+    },
+    "permitInspection": {
+      "attached": false,
+      "sourceLabel": "Permit & Inspection Records",
+      "description": "Permit application, fee schedule, issued permit, inspection requests and results, and closed-permit record."
+    }
+  },
+  "digitalDocIndex": {
+    "fileList": [
+      {
+        "filename": "photo-1.jpg",
+        "category": "Photographic Evidence"
+      },
+      {
+        "filename": "photo-2.jpg",
+        "category": "Photographic Evidence"
+      },
+      {
+        "filename": "photo-3.jpg",
+        "category": "Photographic Evidence"
+      }
+    ]
+  },
+  "missingInputs": [
+    "areasImpacted.collateral: flagged impacted but no damage or scope records were captured",
+    "photos.captureContext: some photos carry neither triadRole nor preliminaryRole",
+    "exhibits.pricingSupport: not attached",
+    "exhibits.permitInspection: not attached"
+  ]
+}

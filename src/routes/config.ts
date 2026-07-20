@@ -237,3 +237,45 @@ configRouter.get('/config/states/status', requireAdminOrMachine, async (_req, re
     })),
   });
 });
+
+// Sync target for the shared codex. n8n authors + organizes code snippets and
+// diagrams in Supabase (keyed area-to-area), then PUSHES the resolved set for a
+// state here. This keeps the codex UPSTREAM of report generation: the Brain
+// reads its own state pack at build time, never Supabase/n8n on the critical
+// path. Codes change on multi-year cycles, so a periodic push is ample.
+configRouter.put('/config/states/:stateCode/code-library', requireAdminOrMachine, async (req, res) => {
+  const stateCode = (req.params.stateCode as string).toUpperCase();
+  const body = req.body ?? {};
+  const library = body.codeLibrary;
+
+  if (!Array.isArray(library)) {
+    res.status(400).json({ error: 'codeLibrary must be an array of CodeProvision entries' });
+    return;
+  }
+  // Minimal structural check — the codex owns full validation; the Brain just
+  // stores what it is handed, but must not accept obviously malformed entries.
+  for (const [i, e] of library.entries()) {
+    if (!e || typeof e.id !== 'string' || typeof e.title !== 'string' || typeof e.text !== 'string') {
+      res.status(400).json({ error: `entry ${i} missing required id/title/text` });
+      return;
+    }
+  }
+
+  const [row] = await db
+    .select({ pack: stateConfigTable.pack })
+    .from(stateConfigTable)
+    .where(eq(stateConfigTable.stateCode, stateCode))
+    .limit(1);
+  if (!row) {
+    res.status(404).json({ error: 'unknown_state', detail: `Seed the ${stateCode} pack first.` });
+    return;
+  }
+
+  const nextPack = { ...row.pack, codeLibrary: library };
+  await db
+    .update(stateConfigTable)
+    .set({ pack: nextPack, updatedAt: new Date() })
+    .where(eq(stateConfigTable.stateCode, stateCode));
+
+  res.json({ stateCode, entries: library.length, syncedAt: new Date().toISOString() });
+});

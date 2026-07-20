@@ -179,6 +179,10 @@ export interface ReportCodeCitation {
   title: string;
   cite: string;
   body: string;
+  // A codex entry may be a text citation or a show-and-explain diagram.
+  form: 'code' | 'diagram';
+  // Data-URI / storage ref for a diagram asset (null for a text citation).
+  assetRef: string | null;
 }
 
 export interface ReportManufacturerSpecs {

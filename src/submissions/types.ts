@@ -214,6 +214,9 @@ export interface SubmittedInspection {
 
   // Siding facets (protocol v2.1). No area/pitch/material — quantities come from
   // the office-side measurement report.
+  // Whether a water-resistive barrier was present behind the siding — drives
+  // the WRB tie-in codex selection.
+  sidingWrbPresent?: boolean | null;
   sidingFacets?: Array<{
     id: string;
     label: string; // S1, S2, ...

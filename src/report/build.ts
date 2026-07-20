@@ -403,12 +403,74 @@ function areaForScopeKey(key: string): ClaimArea | null {
   return null;
 }
 
-function buildCodeCitations(config: ResolvedConfig, impact: ImpactMap): ReportCodeCitation[] {
+// The materials and conditions an inspection actually presents — the fine
+// filter over the state's codex. Materials from roof/siding facets; conditions
+// from tie-ins and documented components. Normalised to lower_snake.
+function inspectionSelectors(inspection: SubmittedInspection): {
+  materials: Set<string>;
+  conditions: Set<string>;
+} {
+  const norm = (v: unknown) =>
+    typeof v === 'string' ? v.trim().toLowerCase().replace(/[\s-]+/g, '_') : '';
+  const materials = new Set<string>();
+  for (const s of inspection.slopes) if (s.material) materials.add(norm(s.material));
+
+  const conditions = new Set<string>();
+  if (inspection.slopes.some((s) => s.tieInValley)) conditions.add('valley');
+  if (inspection.slopes.some((s) => s.tieInHipRidge)) conditions.add('hip_ridge');
+  if ((inspection.sidingFacets ?? []).length && inspection.sidingWrbPresent) {
+    conditions.add('siding_wrb');
+  }
+  for (const c of inspection.components) if (c.componentType) conditions.add(norm(c.componentType));
+  for (const p of inspection.penetrations) if (p.penetrationType) conditions.add(norm(p.penetrationType));
+  return { materials, conditions };
+}
+
+// Select codex entries (code snippets + diagrams) by claim area × material ×
+// condition. Every dimension is optional on the entry; a null dimension means
+// "applies broadly", so legacy state packs resolve exactly as before.
+function buildCodeCitations(
+  config: ResolvedConfig,
+  impact: ImpactMap,
+  inspection: SubmittedInspection,
+): ReportCodeCitation[] {
+  const { materials, conditions } = inspectionSelectors(inspection);
   const out: ReportCodeCitation[] = [];
   for (const p of config.state.codeLibrary) {
-    const area = p.appliesTo.map(areaForScopeKey).find((a): a is ClaimArea => a != null) ?? null;
+    // Area: explicit claimArea wins; else derive from appliesTo (legacy).
+    const area =
+      p.claimArea ?? p.appliesTo.map(areaForScopeKey).find((a): a is ClaimArea => a != null) ?? null;
     if (area && !impact[area]) continue;
-    out.push({ key: p.id, area, title: p.title, cite: p.code, body: p.text });
+
+    // Material: if the entry names materials, at least one must be present on
+    // the inspection. Null/empty = all materials.
+    if (p.materials && p.materials.length > 0) {
+      const wanted = p.materials.map((m) => m.trim().toLowerCase().replace(/[\s-]+/g, '_'));
+      // Contains-match either direction: a captured "architectural_asphalt_shingle"
+      // satisfies a codex key of "asphalt_shingle". Until the app emits a canonical
+      // material taxonomy, this is the pragmatic join; a stricter enum match can
+      // replace it once material types are normalised at capture.
+      const hit = wanted.some((w) =>
+        [...materials].some((m) => m.includes(w) || w.includes(m)),
+      );
+      if (!hit) continue;
+    }
+
+    // Condition: if named, it must be present. Null = unconditional.
+    if (p.condition) {
+      const c = p.condition.trim().toLowerCase().replace(/[\s-]+/g, '_');
+      if (!conditions.has(c)) continue;
+    }
+
+    out.push({
+      key: p.id,
+      area,
+      title: p.title,
+      cite: p.code,
+      body: p.text,
+      form: p.form ?? 'code',
+      assetRef: p.assetRef ?? null,
+    });
   }
   return out;
 }
@@ -895,7 +957,7 @@ export function buildReportData(
           supportingPhotoIds: ra.supportingPhotoIds ?? [],
         }
       : null,
-    codeCitations: buildCodeCitations(config, impact),
+    codeCitations: buildCodeCitations(config, impact, inspection),
     components,
     manufacturerSpecs,
     temporaryRepairs,

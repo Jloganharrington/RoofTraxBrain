@@ -40,6 +40,7 @@ function fullPack(over: Partial<CompanyPack> = {}): CompanyPack {
       phone: '555-0100', email: 'a@b.com', website: null,
     },
     licenses: [{ state: 'VA', number: '2705-1234', classification: 'Class A' }],
+    servicesOffered: ['roofing', 'siding'],
     qualifications: { statement: 'We do roofs.', experienceYears: 12, certifications: [] },
     pricing: { pricePerSquare: 0, currency: 'USD', basisStatement: '', adderRates: {} },
     contractTemplateRef: null,

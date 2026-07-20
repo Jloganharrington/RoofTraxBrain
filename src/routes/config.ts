@@ -9,7 +9,14 @@
 import { Router } from 'express';
 import { eq, and, desc, asc } from 'drizzle-orm';
 import { db } from '../db/client.js';
-import { companyPriceBooksTable, companyServiceAreasTable, stateConfigTable } from '../db/schema.js';
+import {
+  companiesTable,
+  companyConfigTable,
+  companyPriceBooksTable,
+  companyServiceAreasTable,
+  stateConfigTable,
+} from '../db/schema.js';
+import type { CompanyPack } from '../tenancy/types.js';
 import { requireAdminOrMachine } from '../auth/session.js';
 import {
   listOfferableStates,
@@ -278,4 +285,74 @@ configRouter.put('/config/states/:stateCode/code-library', requireAdminOrMachine
     .where(eq(stateConfigTable.stateCode, stateCode));
 
   res.json({ stateCode, entries: library.length, syncedAt: new Date().toISOString() });
+});
+
+
+// Skeleton pack for a brand-new company mid-onboarding. Required fields present
+// but empty, so a partial profile write has a valid base to merge into and the
+// readiness check can report exactly what is still missing.
+function skeletonPack(): CompanyPack {
+  return {
+    legalName: '', brandName: '', logoRef: null,
+    letterhead: { primaryColorHex: '#1E2A3A', addressLines: [], phone: '', email: '', website: null },
+    licenses: [], servicesOffered: [],
+    qualifications: { statement: '', experienceYears: null, certifications: [] },
+    pricing: { pricePerSquare: 0, currency: 'USD', basisStatement: '', adderRates: {} },
+    contractTemplateRef: null,
+    methodologyTemplate: { equipmentBaseline: [], testSquareProtocol: '', markingStandard: '', photoStandard: '' },
+  };
+}
+
+// Progressive company-profile upsert — the onboarding interview writes each step
+// here (identity, licensing, qualifications, servicesOffered, letterhead). Merges
+// a PARTIAL pack into the existing-or-skeleton pack, so steps can be saved
+// independently and out of order. Also ensures the company row exists.
+configRouter.put('/companies/:companyId/profile', requireAdminOrMachine, async (req, res) => {
+  const companyId = req.params.companyId as string;
+  const patch = (req.body?.pack ?? req.body ?? {}) as Partial<CompanyPack>;
+  const displayName = typeof req.body?.name === 'string' ? req.body.name : undefined;
+
+  // Ensure the company row (onboarding is where a company first appears).
+  await db
+    .insert(companiesTable)
+    .values({ id: companyId, name: displayName ?? patch.brandName ?? patch.legalName ?? companyId })
+    .onConflictDoUpdate({
+      target: companiesTable.id,
+      set: displayName ? { name: displayName } : {},
+    });
+
+  const [existing] = await db
+    .select({ pack: companyConfigTable.pack })
+    .from(companyConfigTable)
+    .where(eq(companyConfigTable.companyId, companyId))
+    .limit(1);
+
+  const base = existing?.pack ?? skeletonPack();
+  // Shallow merge at the top level, with a nested merge for the two object
+  // sub-blocks the interview writes piecemeal. Arrays/scalars replace wholesale.
+  const merged: CompanyPack = {
+    ...base,
+    ...patch,
+    letterhead: { ...base.letterhead, ...(patch.letterhead ?? {}) },
+    qualifications: { ...base.qualifications, ...(patch.qualifications ?? {}) },
+    methodologyTemplate: { ...base.methodologyTemplate, ...(patch.methodologyTemplate ?? {}) },
+    // Pricing rates are owned by the price-book endpoint, not the profile.
+    pricing: base.pricing,
+  };
+
+  await db
+    .insert(companyConfigTable)
+    .values({ companyId, pack: merged })
+    .onConflictDoUpdate({
+      target: companyConfigTable.companyId,
+      set: { pack: merged, updatedAt: new Date() },
+    });
+
+  await recordConfigAudit({
+    companyId, area: 'company_pack', action: existing ? 'updated' : 'created',
+    actor: typeof req.body?.actor === 'string' ? req.body.actor : null,
+    detail: { fields: Object.keys(patch) },
+  });
+
+  res.json({ companyId, saved: true, fields: Object.keys(patch) });
 });

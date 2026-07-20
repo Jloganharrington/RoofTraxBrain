@@ -15,6 +15,10 @@ export interface CompanyPack {
     website: string | null;
   };
   licenses: Array<{ state: string; number: string; classification: string }>;
+  // Services the contractor offers (roofing / siding / ...). Coarse filter over
+  // the codex + diagram library: a siding-only contractor never shows roof
+  // codes. Captured in the onboarding interview.
+  servicesOffered: string[];
   // Exhibit B — Statement of Qualifications
   qualifications: {
     statement: string;

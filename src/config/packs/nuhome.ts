@@ -30,6 +30,7 @@ export const nuHomeCompanyPack: CompanyPack = {
   licenses: [
     { state: 'VA', number: '2705-064938A', classification: 'VA Class A Contractor' },
   ],
+  servicesOffered: ['roofing', 'siding'],
   qualifications: {
     statement:
       'NuHome Exteriors is a licensed Virginia Class A roofing contractor specializing in storm ' +
